@@ -1,8 +1,10 @@
 [package]
-name = "dbdm"
+name = "DBDM Project"
 version = "0.1.0"
-authors = ["Yann Aguettaz <yann.aguettaz@ens-lyon.fr>"]
+authors = ["Yann Aguettaz <yann.aguettaz@ens-lyon.fr>",
+	   "Guilhem Niot <guilhem.niot@ens-lyon.fr>"]
 edition = "2018"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
