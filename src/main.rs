@@ -39,10 +39,10 @@ fn eval(e: Expression) -> Table {
 
 fn select(e: Expression, cond: Condition) -> Table {
     let t_from = eval(e);
-    let t_res: Vec<Entry> = Vec::new();
+    let mut t_res: Vec<Entry> = Vec::new();
 
     for entry in &(t_from.1) {
-        if eval_cond_on_entry(cond, t_from.0, *entry) {
+        if eval_cond_on_entry(cond, t_from.0, entry) {
             t_res.push(*entry);
         }
     }
@@ -50,7 +50,7 @@ fn select(e: Expression, cond: Condition) -> Table {
     return (t_from.0, t_res);
 }
 
-fn eval_cond_on_entry(cond: Condition, fields: Vec<&'static str>, e: Entry) -> bool {
+fn eval_cond_on_entry(cond: Condition, fields: Vec<&'static str>, e: &Entry) -> bool {
     match cond {
         Condition::True => true,
         Condition::False => false,
