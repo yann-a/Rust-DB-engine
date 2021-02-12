@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2018-03-06 Mar 18:01 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DBDM Project: mini SQL over CSV files</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="ecoquery" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">DBDM Project: relational algebra over CSV files</h1>
+</div>
+<p>
+The goal of this project is to implement a <i>relational algebra</i> engine that reads data from <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> files.
+</p>
+
+<p>
+You can work either alone or with one person.
+</p>
+
+<p>
+The project can be implemented in C++, Python (2.7 or 3.6) or OCaml and should run either on Mac OS X, Ubuntu Linux (16.04 or 17.10) or Arch Linux.
+Whenever possible use "standard" build/dependency toolchains (CMake, Pip, Opam+dune).
+</p>
+
+<p>
+It should be accompanied by a README file containing information on:
+</p>
+<ul class="org-ul">
+<li>the name of the student(s)</li>
+<li>the targeted runtime environment (and if necessary the packages to be installed)</li>
+<li>the build procedure</li>
+</ul>
+<p>
+And by a dbdm_project_Firstname1_LASTNAME1_Firstname2_LASTNAME2.pdf or dbdm_project_Firstname1_LASTNAME1_Firstname2_LASTNAME2.md file containing information on:
+</p>
+<ul class="org-ul">
+<li>the name of the student(s)</li>
+<li>any information about technical/design choices you made</li>
+<li>some detailed examples with the results of your engine</li>
+<li>your benchmarks</li>
+</ul>
+<p>
+Furthermore, you can add some examples to illustrate the well-working or your engine. Make sure to give the details on how to run them in your README.
+</p>
+
+<p>
+
+<p>
+The whole project is due for TO FILL to <a href="mailto:emmanuel.coquery@univ-lyon1.fr?subject=DBDM-final">Emmanuel Coquery</a> (warning:
+there can be mail failures on TO FILL).
+</p>
+
+<div id="outline-container-org91fe800" class="outline-2">
+<h2 id="org91fe800"><a id="ID-9F037DA7-DC96-4FB1-946F-F2F8D7EE5EA7"></a><span class="section-number-2">1</span> Relational Algebra Engine Over CSV (6 points)</h2>
+
+<div id="outline-container-org161df13" class="outline-3">
+<h3 id="org161df13"><a id="ID-94A1DDCA-C7E7-4D40-A2E4-2DE34857CB02"></a><span class="section-number-3">1.1</span> RA Engine (4 points)</h3>
+<p>
+First, design a data structures to represent:
+</p>
+<ul class="org-ul">
+<li>Simple relational algebra operators and expressions (selection,
+project, cartesian product, relation (<i>i.e.</i> table), renaming,
+minus, union).
+You can use a simple language for selection conditions (<i>e.g.</i>
+boolean connectors and = and &lt; comparisons, without computation of
+new values).</li>
+<li>Data to be processed (tuples, collections of tuples). 
+You can also assume that all atomic data is of the same type (only strings
+or only numbers).
+Collections of tuples should be writable to CSV format (with a first header line)</li>
+</ul>
+
+<p>
+Then, implement a simple evaluator for your relational algebra expressions:
+</p>
+<ul class="org-ul">
+<li>a relation is read from a csv file named after the relation (<i>e.g.</i> <code>R.csv</code> for a relation <i>R</i>)</li>
+<li>cartesian product will use nested loops</li>
+<li>all operators will produce data in an eager way</li>
+</ul>
+<p>
+Note that there are libraries in all proposed languages to read CSV data.
+</p>
+</div>
+
+<div id="outline-container-org161df13" class="outline-3">
+<h3 id="org161df13"><a id="ID-94A1DDCA-C7E7-4D40-A2E4-2DE34857CB02"></a><span class="section-number-3">1.2</span> Json parser (2 points)</h3>
+<p>
+In order to make the adding of external queries easy, create a loader that loads json queries with the following syntax:
+</p>
+<div class="outline-text-3" id="text-4-2">
+<pre class="example">
+R ::= "{" ""operation":" O "," ""args":" ARGS "}"
+O ::= ""selection"" | ""projection"" | ""product"" | ""renaming"" | ""minus"" | ""union"" | ""load"" | ""rspr"" | ""jpr"" 
+ARGS ::= "{" ""attributes":" ATTS "," ""object":" R "}" // for selection
+      |  "{" ""condition":" COND "," ""object":" R "}" // for projection
+      |  "{" ""object1":" R "," ""object2":" R "}" // for product, minus and union
+      |  "{" ""old attributes":" ATTS "," ""new attributes":" ATTS "," ""object":" R "}" // for renaming
+      |  "{" ""filename":" FILENAME "}" // for load
+      |  "{" ""filename":" FILENAME "," ""old attributes":" ATTS "," ""condition":" COND "," ""new attributes":" ATTS "}" // for rspr
+      |  "{" ""object1":" R "," ""object2":" R ""object2":" "," ""condition":"" COND "," ""old attributes":" ATTS "," ""new attributes":" ATTS "}" // for jpr
+COND ::= ""True"" | ""False"" 
+      | "{" ""logical":" ""not"" "," ""condition":" COND "}"
+      | "{" ""logical":" ""and"" "," ""condition1":" COND "," ""condition2":" COND "}"
+      | "{" ""logical":" ""or"" "," ""condition1":" COND "," ""condition2":" COND "}"
+      | "{" ""comparator":" COMP "," ""attribute1":" "STRING" "," ""attribute2":" "STRING" "}"
+COMP ::= ""<"" | "">"" | ""=""
+ATTS ::= ... // comma separated list of strings
+FILENAME ::= ... // matches \"[A-Za-z\-_0-9]+\.csv\"
+</pre>
+</div>
+<p>
+Here is a small example
+</p>
+<div class="outline-text-3" id="text-4-2">
+<pre class="example">
+  {
+    "operation": "selection",
+    "args": {
+        "attributes": ["att1", "att2"],
+        "object": {"operation": "load",
+                   "filename": "test.csv"
+                }
+    }
+}
+</pre>
+</div>
+<p>
+Note that there are json libraries in all the proposed languages.
+Make sure to detail the scripting interface in your README.
+</p>
+</div>
+
+</div>
+</div>
+
+
+</div>
+
+
+<div id="outline-container-org92d0d4c" class="outline-2">
+<h2 id="org92d0d4c"><a id="ID-9DDF12F6-FC4B-4F36-8EC4-4B29666B56F9"></a><span class="section-number-2">2</span> A Better Algebra Engine (6 points)</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+
+<div id="outline-container-orgd5b44a0" class="outline-3">
+<h3 id="orgd5b44a0"><a id="ID-0291AE2A-64E7-4F9D-BD52-0DDAF598E0D5"></a><span class="section-number-3">2.1</span> Collapsing algebra operations (2 points)</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+Implement 2 new operators that regroup existing ones:
+</p>
+<ol class="org-ol">
+<li>the ReadSelectProjectRename operator that reads a CSV file, filter lines
+and transform remaning tuples keeping only the proper attributes
+after renaming</li>
+<li>the JoinProjectRename operator that combine two relations in a
+&theta;-join and transform resulting tuples keeping only the proper attributes
+after renaming (the &theta;-join being a cartesian product
+followed by a selection)</li>
+</ol>
+
+<p>
+Try to use algorithms that are more efficient (in cpu and/or memory) than
+what would have been done using the simple relational algebra
+evaluator.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc028a8f" class="outline-3">
+<h3 id="orgc028a8f"><a id="ID-A178E825-4AFF-4AD8-8574-61FE439A8679"></a><span class="section-number-3">2.2</span> Simple algebra expression optimization (4 points)</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+First, write an optimizer that uses relational algebra equivalence rules to:
+</p>
+<ol class="org-ol">
+<li>push down selections</li>
+<li>add projection to discard unneeded attributes as soon as possible</li>
+<li>replace subexpressions using the two new introduced operators</li>
+</ol>
+
+<p>
+Next, try to reorder cartesian products to minimize the number of
+cartesian products that are not immediately restricted by a selection
+(<i>i.e.</i> that don't correspond to &theta;-joins).
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orge819ef2" class="outline-3">
+<h2 id="orge819ef2"><a id="ID-297A8FC6-D8D5-4B5D-B1DA-76BEF04B68A1"></a><span class="section-number-3">3</span> Other optimizations (4 points)</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+You can implement as many of the following optimizations as you want. Their relevance will have to be illustrated in the Benchmarking.
+</p>
+<ul class="org-ul">
+<li>Better query optimizer using a cost model</li>
+<li>Factorizing cartesian products over union/minus</li>
+<li>Various cartesian product implementations
+<ul class="org-ul">
+<li>Computing meta-data on intermediate results for dynamically choose an appropriate cartesian product implementation</li>
+</ul></li>
+<li>Lazy evaluation (<i>e.g.</i> in the form of iterators) to reduce memory usage
+<ul class="org-ul">
+<li>The possibility to use temporary files if an intermediate result
+needs to be materialized and doesn't fit in memory (either
+available memory or any limit you decide)</li>
+</ul></li>
+<li>Any idea you have</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge819ef2" class="outline-3">
+<h2 id="orge819ef2"><a id="ID-297A8FC6-D8D5-4B5D-B1DA-76BEF04B68A1"></a><span class="section-number-3">4</span> Benchmarking (4 points)</h3>
+<div class="outline-text-3" id="text-3-4">
+  <p>
+    Create a benchmarking script that compates the performances of your different versions on your interpreter (sections 1 to 3). Your results must be 
+    reproducible so make sure to include the details on how to perform a benchmark in your README. 
+</p>
+<p>
+    There is one extra point to gain if it is easy to add extra requests to you benchmarking framework.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0e48d39" class="outline-2">
+<h2 id="org0e48d39"><a id="ID-ECE8CD42-DB3D-4C89-BD69-206A47725701"></a><span class="section-number-2">5</span> Annexes</h2>
+<div class="outline-text-2" id="text-4">
+</div>
+
+<div id="outline-container-org93e258e" class="outline-3">
+<h3 id="org93e258e"><a id="ID-E9CA86E2-F85D-498B-A286-5FA8580951E0"></a><span class="section-number-3">5.1</span> CSV file conventions</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+The following assumptions will be made on <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> files:
+</p>
+<ul class="org-ul">
+<li>the first line contains attribute names</li>
+<li>every row contains the same number of fields</li>
+</ul>
+</div>
+</div>
+
+
+
+<div id="outline-container-orgb134d49" class="outline-3">
+<h3 id="orgb134d49"><a id="ID-93CC464F-F3C9-40CB-BDA6-DEE6506C8CE7"></a><span class="section-number-3">5.2</span> Samples</h3>
+<div class="outline-text-3" id="text-4-3">
+<p>
+Some sample files are available in the samples folder.
+</p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
