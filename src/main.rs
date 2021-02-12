@@ -38,38 +38,32 @@ fn eval(e: Expression) -> Table {
 }
 
 fn select(e: Expression, cond: Condition) -> Table {
-    let t_from = eval(e);
-    let mut t_res: Vec<Entry> = Vec::new();
+    let (fields, values) = eval(e);
+    let t_res: Vec<Entry> = values.into_iter().filter(|entry| { eval_cond_on_entry(&cond, &fields, &entry) }).collect();
 
-    for entry in &(t_from.1) {
-        if eval_cond_on_entry(cond, t_from.0, entry) {
-            t_res.push(*entry);
-        }
-    }
-
-    return (t_from.0, t_res);
+    return (fields, t_res);
 }
 
-fn eval_cond_on_entry(cond: Condition, fields: Vec<&'static str>, e: &Entry) -> bool {
+fn eval_cond_on_entry(cond: &Condition, fields: &Vec<&'static str>, e: &Entry) -> bool {
     match cond {
         Condition::True => true,
         Condition::False => false,
-        Condition::And(c1, c2) => eval_cond_on_entry(*c1, fields, e) && eval_cond_on_entry(*c2, fields, e),
-        Condition::Or(c1, c2) => eval_cond_on_entry(*c1, fields, e) || eval_cond_on_entry(*c2, fields, e),
-        Condition::Equal(f1, f2) => get_value(f1, fields, e) == get_value(f2, fields, e),
-        Condition::Less(f1, f2) => get_value(f1, fields, e) < get_value(f2, fields, e),
-        Condition::More(f1, f2) => get_value(f1, fields, e) > get_value(f2, fields, e)
+        Condition::And(c1, c2) => eval_cond_on_entry(c1, &fields, e) && eval_cond_on_entry(c2, &fields, e),
+        Condition::Or(c1, c2) => eval_cond_on_entry(c1, &fields, e) || eval_cond_on_entry(c2, &fields, e),
+        Condition::Equal(f1, f2) => *get_value(f1, &fields, e) == *get_value(f2, &fields, e),
+        Condition::Less(f1, f2) => *get_value(f1, &fields, e) < *get_value(f2, &fields, e),
+        Condition::More(f1, f2) => *get_value(f1, &fields, e) > *get_value(f2, &fields, e)
     }
 }
 
-fn get_value(field: &'static str, fields: Vec<&'static str>, e: Entry) -> Value {
+fn get_value<'a, 'b>(field: &'static str, fields: &'b Vec<&'static str>, e: &'a Entry) -> &'a Value {
     for i in 0..fields.len()-1 {
         if field == fields[i] {
-            return e[i];
+            return &e[i];
         }
     }
 
-    return Value::Int(0);
+    return &Value::Int(0);
 }
 
 fn main() {
