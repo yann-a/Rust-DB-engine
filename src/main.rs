@@ -44,6 +44,7 @@ fn eval(e: Expression) -> Table {
     match e {
         Expression::Table(table) => table,
         Expression::Selection(e_from, cond) => select(*e_from, *cond),
+        Expression::Project(columns, expression) => project(columns, *expression),
         _ => (Vec::new(), Vec::new())
     }
 }
@@ -53,6 +54,21 @@ fn select(e: Expression, cond: Condition) -> Table {
     let t_res: Vec<Entry> = values.into_iter().filter(|entry| { eval_cond_on_entry(&cond, &fields, &entry) }).collect();
 
     return (fields, t_res);
+}
+
+fn project(columns: Vec<&'static str>, expression: Expression) -> Table {
+    let (fields, values) = eval(expression);
+
+    let t_res : Vec<Entry> = values.into_iter().map(
+        |entry| {
+            columns.into_iter().map(
+                |column| {
+                    *get_value(&Value::Column(column), &fields, &entry)
+                }
+            ).collect()
+        }).collect();
+
+    return (columns, values);
 }
 
 fn eval_cond_on_entry(cond: &Condition, fields: &Vec<&'static str>, e: &Entry) -> bool {
@@ -67,7 +83,7 @@ fn eval_cond_on_entry(cond: &Condition, fields: &Vec<&'static str>, e: &Entry) -
     }
 }
 
-fn get_value<'a, 'b>(value: &'a Value, fields: &'b Vec<&'static str>, e: &'a Entry) -> &'a Value {
+fn get_value<'a, 'b>(value: &'a Value, fields: &'b Vec<&'static str>, e: &'a Entry) -> &'a Value { // sould return only Value::Int or Value::Str
     match value {
         Value::Int(_) | Value::Str(_) => value,
         Value::Column(field) => {
@@ -109,7 +125,7 @@ fn main() {
             ))
         ),
         Box::new(
-            Condition::Equal(Box::new(Value::Column(&"Id")), Box::new(Value::Int(12)))
+            Condition::More(Box::new(Value::Column(&"Id")), Box::new(Value::Int(12)))
         )
     );
 
