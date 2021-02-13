@@ -1,4 +1,4 @@
-#[derive(PartialOrd, Ord, Debug)]
+#[derive(PartialOrd, Ord, Debug, Copy, Clone)]
 enum Value {
     Int(u64),
     Str(&'static str),
@@ -61,14 +61,14 @@ fn project(columns: Vec<&'static str>, expression: Expression) -> Table {
 
     let t_res : Vec<Entry> = values.into_iter().map(
         |entry| {
-            columns.into_iter().map(
+            columns.clone().into_iter().map(
                 |column| {
                     *get_value(&Value::Column(column), &fields, &entry)
                 }
             ).collect()
         }).collect();
 
-    return (columns, values);
+    return (columns, t_res);
 }
 
 fn eval_cond_on_entry(cond: &Condition, fields: &Vec<&'static str>, e: &Entry) -> bool {
@@ -113,20 +113,23 @@ fn print_table(t: Table) {
 }
 
 fn main() {
-    let req = Expression::Selection(
-        Box::new(
-            Expression::Table((
-                vec![&"Id", &"Nom", &"Nb"],
-                vec![
-                    vec![Value::Int(5), Value::Str(&"Guilhem"), Value::Int(5)],
-                    vec![Value::Int(12), Value::Str(&"Yann"), Value::Int(23)],
-                    vec![Value::Int(23), Value::Str(&"JFP"), Value::Int(2)]
-                ]
-            ))
-        ),
-        Box::new(
-            Condition::More(Box::new(Value::Column(&"Id")), Box::new(Value::Int(12)))
-        )
+    let req = Expression::Project(
+        vec![&"Nom", &"Id"],
+        Box::new(Expression::Selection(
+            Box::new(
+                Expression::Table((
+                    vec![&"Id", &"Nom", &"Nb"],
+                    vec![
+                        vec![Value::Int(5), Value::Str(&"Guilhem"), Value::Int(5)],
+                        vec![Value::Int(12), Value::Str(&"Yann"), Value::Int(23)],
+                        vec![Value::Int(23), Value::Str(&"JFP"), Value::Int(2)]
+                    ]
+                ))
+            ),
+            Box::new(
+                Condition::More(Box::new(Value::Column(&"Id")), Box::new(Value::Int(12)))
+            )
+        ))
     );
 
     let result = eval(req);
