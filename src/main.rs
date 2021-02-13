@@ -1,8 +1,18 @@
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialOrd, Ord, Debug)]
 enum Value {
     Int(u64),
     Str(&'static str)
 }
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::Int(i), Value::Int(j)) => i==j,
+            (Value::Str(s), Value::Str(t)) => s==t,
+            (_, _) => false
+        }
+    }
+}
+impl Eq for Value {}
 
 type Entry = Vec<Value>;
 
@@ -57,15 +67,48 @@ fn eval_cond_on_entry(cond: &Condition, fields: &Vec<&'static str>, e: &Entry) -
 }
 
 fn get_value<'a, 'b>(field: &'static str, fields: &'b Vec<&'static str>, e: &'a Entry) -> &'a Value {
-    for i in 0..fields.len()-1 {
+    for i in 0..fields.len() {
         if field == fields[i] {
             return &e[i];
         }
     }
 
-    return &Value::Int(0);
+    return &Value::Int(2306);
+}
+
+fn print_table(t: Table) {
+    let (fields, values) = t;
+
+    for i in 0..fields.len() {
+        print!("{} ", fields[i]);
+    }
+    println!();
+    for j in 0..values.len() {
+        for i in 0..fields.len() {
+            print!("{:?} ", values[j][i]);
+        }
+        println!();
+    }
 }
 
 fn main() {
-    println!("Hello, worldd!");
+    let req = Expression::Selection(
+        Box::new(
+            Expression::Table((
+                vec![&"Id", &"Nom", &"Nb"],
+                vec![
+                    vec![Value::Int(5), Value::Str(&"Guilhem"), Value::Int(5)],
+                    vec![Value::Int(12), Value::Str(&"Yann"), Value::Int(23)],
+                    vec![Value::Int(23), Value::Str(&"JFP"), Value::Int(2)]
+                ]
+            ))
+        ),
+        Box::new(
+            Condition::More(&"Id", &"Nb")
+        )
+    );
+
+    let result = eval(req);
+
+    print_table(result);
 }
