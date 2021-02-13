@@ -1,7 +1,8 @@
 #[derive(PartialOrd, Ord, Debug)]
 enum Value {
     Int(u64),
-    Str(&'static str)
+    Str(&'static str),
+    Column(&'static str)
 }
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
@@ -23,9 +24,9 @@ enum Condition {
     False,
     Or(Box<Condition>, Box<Condition>),
     And(Box<Condition>, Box<Condition>),
-    Less(&'static str, &'static str),
-    Equal(&'static str, &'static str),
-    More(&'static str, &'static str)
+    Less(Box<Value>, Box<Value>),
+    Equal(Box<Value>, Box<Value>),
+    More(Box<Value>, Box<Value>)
 }
 
 enum Expression {
@@ -60,20 +61,24 @@ fn eval_cond_on_entry(cond: &Condition, fields: &Vec<&'static str>, e: &Entry) -
         Condition::False => false,
         Condition::And(c1, c2) => eval_cond_on_entry(c1, &fields, e) && eval_cond_on_entry(c2, &fields, e),
         Condition::Or(c1, c2) => eval_cond_on_entry(c1, &fields, e) || eval_cond_on_entry(c2, &fields, e),
-        Condition::Equal(f1, f2) => *get_value(f1, &fields, e) == *get_value(f2, &fields, e),
-        Condition::Less(f1, f2) => *get_value(f1, &fields, e) < *get_value(f2, &fields, e),
-        Condition::More(f1, f2) => *get_value(f1, &fields, e) > *get_value(f2, &fields, e)
+        Condition::Equal(v1, v2) => *get_value(v1, &fields, e) == *get_value(v2, &fields, e),
+        Condition::Less(v1, v2) => *get_value(v1, &fields, e) < *get_value(v2, &fields, e),
+        Condition::More(v1, v2) => *get_value(v1, &fields, e) > *get_value(v2, &fields, e)
     }
 }
 
-fn get_value<'a, 'b>(field: &'static str, fields: &'b Vec<&'static str>, e: &'a Entry) -> &'a Value {
-    for i in 0..fields.len() {
-        if field == fields[i] {
-            return &e[i];
+fn get_value<'a, 'b>(value: &'a Value, fields: &'b Vec<&'static str>, e: &'a Entry) -> &'a Value {
+    match value {
+        Value::Int(_) | Value::Str(_) => value,
+        Value::Column(field) => {
+            for i in 0..fields.len() {
+                if *field == fields[i] {
+                    return &e[i];
+                }
+            }
+            return &Value::Int(2306); // Shouldn't happen
         }
     }
-
-    return &Value::Int(2306);
 }
 
 fn print_table(t: Table) {
@@ -104,7 +109,7 @@ fn main() {
             ))
         ),
         Box::new(
-            Condition::More(&"Id", &"Nb")
+            Condition::Equal(Box::new(Value::Column(&"Id")), Box::new(Value::Int(12)))
         )
     );
 
