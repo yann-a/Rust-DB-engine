@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io;
+
 #[derive(PartialOrd, Ord, Debug, Copy, Clone)]
 enum Value {
     Int(u64),
@@ -66,7 +69,8 @@ fn project(columns: Vec<&'static str>, expression: Expression) -> Table {
                     *get_value(&Value::Column(column), &fields, &entry)
                 }
             ).collect()
-        }).collect();
+        }
+    ).collect();
 
     return (columns, t_res);
 }
