@@ -2,7 +2,7 @@
 name = "dbdm_project"
 version = "0.1.0"
 authors = ["Yann Aguettaz <yann.aguettaz@ens-lyon.fr>",
-	   "Guilhem Niot <guilhem.niot@ens-lyon.fr>"]
+	"Guilhem Niot <guilhem.niot@ens-lyon.fr>"]
 edition = "2018"
 readme = "README.md"
 
