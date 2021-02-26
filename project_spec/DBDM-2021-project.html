@@ -314,13 +314,13 @@ In order to make the adding of external queries easy, create a loader that loads
 <pre class="example">
 R ::= "{" ""operation":" O "," ""args":" ARGS "}"
 O ::= ""selection"" | ""projection"" | ""product"" | ""renaming"" | ""minus"" | ""union"" | ""load"" | ""rspr"" | ""jpr"" 
-ARGS ::= "{" ""attributes":" ATTS "," ""object":" R "}" // for selection
-      |  "{" ""condition":" COND "," ""object":" R "}" // for projection
+ARGS ::= "{" ""attributes":" ATTS "," ""object":" R "}" // for projection
+      |  "{" ""condition":" COND "," ""object":" R "}" // for selection
       |  "{" ""object1":" R "," ""object2":" R "}" // for product, minus and union
       |  "{" ""old attributes":" ATTS "," ""new attributes":" ATTS "," ""object":" R "}" // for renaming
       |  "{" ""filename":" FILENAME "}" // for load
-      |  "{" ""filename":" FILENAME "," ""old attributes":" ATTS "," ""condition":" COND "," ""new attributes":" ATTS "}" // for rspr
-      |  "{" ""object1":" R "," ""object2":" R ""object2":" "," ""condition":"" COND "," ""old attributes":" ATTS "," ""new attributes":" ATTS "}" // for jpr
+      |  "{" ""filename":" FILENAME "," ""condition":" COND "," ""old attributes":" ATTS ","  ""new attributes":" ATTS "}" // for rspr
+      |  "{" ""object1":" R "," ""object2":" R "," ""condition":"" COND "," ""old attributes":" ATTS "," ""new attributes":" ATTS "}" // for jpr
 COND ::= ""True"" | ""False"" 
       | "{" ""logical":" ""not"" "," ""condition":" COND "}"
       | "{" ""logical":" ""and"" "," ""condition1":" COND "," ""condition2":" COND "}"
@@ -337,7 +337,7 @@ Here is a small example
 <div class="outline-text-3" id="text-4-2">
 <pre class="example">
   {
-    "operation": "selection",
+    "operation": "projection",
     "args": {
         "attributes": ["att1", "att2"],
         "object": {"operation": "load",
@@ -350,6 +350,7 @@ Here is a small example
 <p>
 Note that there are json libraries in all the proposed languages.
 Make sure to detail the scripting interface in your README.
+If your compiled program is main, the execution of ./main example.json output.csv should execute example.json and output the result in output.csv
 </p>
 </div>
 
