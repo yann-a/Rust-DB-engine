@@ -1,0 +1,138 @@
+use std::fs::File;
+use std::io;
+
+#[derive(PartialOrd, Ord, Debug)]
+enum Value {
+    Int(u64),
+    Str(String),
+    Column(String)
+}
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::Int(i), Value::Int(j)) => i==j,
+            (Value::Str(s), Value::Str(t)) => s==t,
+            (_, _) => false
+        }
+    }
+}
+impl Eq for Value {}
+
+type Entry = Vec<Value>;
+
+type Table = (Vec<String>, Vec<Entry>);
+
+enum Condition<'a> {
+    True,
+    False,
+    Or(&'a Condition<'a>, &'a Condition<'a>),
+    And(&'a Condition<'a>, &'a Condition<'a>),
+    Less(&'a Value, &'a Value),
+    Equal(&'a Value, &'a Value),
+    More(&'a Value, &'a Value)
+}
+
+enum Expression<'a> {
+    Table(Table),
+    Selection(&'a Expression<'a>, &'a Condition<'a>),
+    Project(Vec<String>, &'a Expression<'a>),
+    Renaming(Vec<String>, Vec<String>, &'a Expression<'a>),
+    Minus(&'a Expression<'a>, &'a Expression<'a>),
+    Union(&'a Expression<'a>, &'a Expression<'a>),
+    Product(&'a Expression<'a>, &'a Expression<'a>),
+    Load(String)
+}
+
+fn eval(e: &Expression) -> Table {
+    match e {
+        Expression::Table(table) => *table,
+        Expression::Selection(e_from, cond) => select(e_from, cond),
+        Expression::Project(columns, expression) => project(columns, expression),
+        _ => (Vec::new(), Vec::new())
+    }
+}
+
+fn select(e: &Expression, cond: &Condition) -> Table {
+    let (fields, values) = eval(e);
+    let t_res: Vec<Entry> = values.into_iter().filter(|entry| { eval_cond_on_entry(&cond, &fields, &entry) }).collect();
+
+    return (fields, t_res);
+}
+
+fn project(columns: &Vec<String>, expression: &Expression) -> Table {
+    let (fields, values) = eval(expression);
+
+    let t_res : Vec<Entry> = values.into_iter().map(
+        |entry| {
+            columns.clone().into_iter().map(
+                |column| {
+                    *get_value(&Value::Column(column), &fields, &entry)
+                }
+            ).collect()
+        }
+    ).collect();
+
+    return (*columns, t_res);
+}
+
+fn eval_cond_on_entry(cond: &Condition, fields: &Vec<String>, e: &Entry) -> bool {
+    match cond {
+        Condition::True => true,
+        Condition::False => false,
+        Condition::And(c1, c2) => eval_cond_on_entry(c1, &fields, e) && eval_cond_on_entry(c2, &fields, e),
+        Condition::Or(c1, c2) => eval_cond_on_entry(c1, &fields, e) || eval_cond_on_entry(c2, &fields, e),
+        Condition::Equal(v1, v2) => *get_value(v1, &fields, e) == *get_value(v2, &fields, e),
+        Condition::Less(v1, v2) => *get_value(v1, &fields, e) < *get_value(v2, &fields, e),
+        Condition::More(v1, v2) => *get_value(v1, &fields, e) > *get_value(v2, &fields, e)
+    }
+}
+
+fn get_value<'a, 'b>(value: &'a Value, fields: &'b Vec<String>, e: &'a Entry) -> &'a Value { // sould return only Value::Int or Value::Str
+    match value {
+        Value::Int(_) | Value::Str(_) => value,
+        Value::Column(field) => {
+            for i in 0..fields.len() {
+                if *field == fields[i] {
+                    return &e[i];
+                }
+            }
+            return &Value::Int(2306); // Shouldn't happen
+        }
+    }
+}
+
+fn print_table(t: Table) {
+    let (fields, values) = t;
+
+    for i in 0..fields.len() {
+        print!("{} ", fields[i]);
+    }
+    println!();
+    for j in 0..values.len() {
+        for i in 0..fields.len() {
+            print!("{:?} ", values[j][i]);
+        }
+        println!();
+    }
+}
+
+fn main() {
+    let req = Expression::Project(
+        vec![String::from("Nom"), String::from("Id")],
+        &Expression::Selection(
+            &Expression::Table((
+                vec![String::from("Id"), String::from("Nom"), String::from("Nb")],
+                vec![
+                    vec![Value::Int(5), Value::Str(String::from("Guilhem")), Value::Int(5)],
+                    vec![Value::Int(12), Value::Str(String::from("Yann")), Value::Int(23)],
+                    vec![Value::Int(23), Value::Str(String::from("JFP")), Value::Int(2)]
+                ]  
+            )),
+            &Condition::More(&Value::Column(String::from("Id")), &Value::Int(12))
+        )
+    );
+
+    let result = eval(&req);
+
+    print_table(result);
+}
