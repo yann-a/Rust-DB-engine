@@ -1,5 +1,4 @@
 use crate::types::*;
-use crate::output::*;
 use csv::Reader;
 
 pub fn eval(expression: Box<Expression>) -> Table {
@@ -69,7 +68,16 @@ fn read(filename: String) -> Table {
     let mut rdr = Reader::from_path(filename).unwrap();
 
     let headers: Vec<String> = rdr.headers().unwrap().into_iter().map(|s| String::from(s)).collect();
-    let entries: Vec<Entry> = rdr.records().into_iter().map(|record| record.unwrap().into_iter().map(|value| Value::Str(String::from(value))).collect() ).collect();
+    let entries: Vec<Entry> = rdr.records().into_iter().map(
+        |record| record.unwrap().into_iter().map(
+            |value| {
+                match value.parse::<i64>() {
+                    Ok(i) => Value::Int(i),
+                    Err(_) => Value::Str(String::from(value))
+                }
+            }
+        ).collect()
+    ).collect();
 
     (headers, entries)
 }
