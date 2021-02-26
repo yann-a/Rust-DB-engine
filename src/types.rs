@@ -1,4 +1,6 @@
-#[derive(Debug, Clone)]
+use serde_derive::Deserialize;
+
+#[derive(Debug, Clone, Deserialize)]
 pub enum Value {
     Int(i64),
     Str(String),
@@ -20,6 +22,7 @@ pub type Entry = Vec<Value>;
 
 pub type Table = (Vec<String>, Vec<Entry>);
 
+#[derive(Deserialize)]
 pub enum Condition {
     True,
     False,
@@ -30,11 +33,18 @@ pub enum Condition {
     More(Box<Value>, Box<Value>)
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase", tag = "operation", content = "args")] 
 pub enum Expression {
+    #[serde(skip)]
     Table(Table),
+    #[serde(rename="selection")]
     Select(Box<Expression>, Box<Condition>),
+    #[serde(rename="projection")]
     Project(Box<Expression>, Vec<String>), // expression, column names
+    #[serde(rename="renaming")]
     Rename(Box<Expression>, Vec<String>, Vec<String>), // expression, old column names, new column names
+    #[serde(rename="minus")]
     Except(Box<Expression>, Box<Expression>),
     Union(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
