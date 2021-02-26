@@ -36,8 +36,8 @@ pub enum Condition {
 #[derive(Deserialize)]
 #[serde(rename_all = "lowercase", tag = "operation", content = "args")] 
 pub enum Expression {
-    #[serde(skip)]
-    Table(Table),
+    //#[serde(skip)]
+    //Table(Table),
     #[serde(rename="selection")]
     Select(Box<Expression>, Box<Condition>),
     #[serde(rename="projection")]
