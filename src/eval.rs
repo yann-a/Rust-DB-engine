@@ -7,6 +7,7 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Table(table) => table,
         Expression::Select(expression_from, condition) => select(expression_from, condition),
         Expression::Project(expression_from, columns) => project(expression_from, columns),
+        Expression::Product(expr1, expr2) => project(expr1, expr2),
         Expression::Load(filename) => read(filename),
         _ => (Vec::new(), Vec::new())
     }
@@ -43,6 +44,25 @@ fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
     }
 
     (columns, entries)
+}
+
+fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
+    let (mut column_names1, entries1) = eval(expression1);
+    let (mut column_names2, entries2) = eval(expression2);
+
+    let mut final_entries: Vec<Entry> = Vec::new();
+
+    for entry1 in entries1 {
+        for entry2 in &entries2 {
+            let mut entry = entry1.clone();
+            entry.append(&mut entry2.clone());
+
+            final_entries.push(entry);
+        }
+    }
+    column_names1.append(&mut column_names2);
+
+    (column_names1, final_entries)
 }
 
 fn read(filename: String) -> Table {
