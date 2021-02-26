@@ -1,11 +1,13 @@
 use crate::types::*;
 use crate::output::*;
+use csv::Reader;
 
 pub fn eval(expression: Box<Expression>) -> Table {
     match *expression {
         Expression::Table(table) => table,
         Expression::Select(expression_from, condition) => select(expression_from, condition),
         Expression::Project(expression_from, columns) => project(expression_from, columns),
+        Expression::Load(filename) => read(filename),
         _ => (Vec::new(), Vec::new())
     }
 }
@@ -41,6 +43,15 @@ fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
     }
 
     (columns, entries)
+}
+
+fn read(filename: String) -> Table {
+    let mut rdr = Reader::from_path(filename).unwrap();
+
+    let headers: Vec<String> = rdr.headers().unwrap().into_iter().map(|s| String::from(s)).collect();
+    let entries: Vec<Entry> = rdr.records().into_iter().map(|record| record.unwrap().into_iter().map(|value| Value::Str(String::from(value))).collect() ).collect();
+
+    (headers, entries)
 }
 
 fn eval_condition(entry: &Entry, column_names: &Vec<String>, condition: &Box<Condition>) -> bool {
