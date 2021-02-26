@@ -6,7 +6,7 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Table(table) => table,
         Expression::Select(expression_from, condition) => select(expression_from, condition),
         Expression::Project(expression_from, columns) => project(expression_from, columns),
-        Expression::Product(expr1, expr2) => project(expr1, expr2),
+        Expression::Product(expr1, expr2) => product(expr1, expr2),
         Expression::Load(filename) => read(filename),
         _ => (Vec::new(), Vec::new())
     }
