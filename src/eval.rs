@@ -64,6 +64,18 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
     (column_names1, final_entries)
 }
 
+
+fn minus(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
+    let (column_names1, entries1) = eval(expression1);
+    let (column_names2, entries2) = eval(expression2);
+
+    let new_entries = entries1.into_iter().filter(
+        |entry1| entries2.iter().all(|entry2| !(*entry1 == *entry2))
+    ).collect();
+
+    (column_names1, new_entries)
+}
+
 fn read(filename: String) -> Table {
     let mut rdr = Reader::from_path(filename).unwrap();
 

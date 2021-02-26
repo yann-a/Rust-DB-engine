@@ -4,6 +4,17 @@ pub enum Value {
     Str(String),
     Column(String)
 }
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::Int(i), Value::Int(j)) => i==j,
+            (Value::Str(s), Value::Str(t)) => s==t,
+            (Value::Column(s), Value::Column(t)) => s==t,
+            (_, _) => false
+        }
+    }
+}
+impl Eq for Value {}
 
 pub type Entry = Vec<Value>;
 
