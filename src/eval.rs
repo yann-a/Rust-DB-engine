@@ -7,6 +7,8 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Select(expression_from, condition) => select(expression_from, condition),
         Expression::Project(expression_from, columns) => project(expression_from, columns),
         Expression::Product(expr1, expr2) => product(expr1, expr2),
+        Expression::Except(expr1, expr2) => minus(expr1, expr2),
+        Expression::Union(expr1, expr2) => union(expr1, expr2),
         Expression::Load(filename) => read(filename),
         _ => (Vec::new(), Vec::new())
     }
@@ -62,6 +64,27 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
     column_names1.append(&mut column_names2);
 
     (column_names1, final_entries)
+}
+
+
+fn minus(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
+    let (column_names1, entries1) = eval(expression1);
+    let (column_names2, entries2) = eval(expression2);
+
+    let new_entries = entries1.into_iter().filter(
+        |entry1| entries2.iter().all(|entry2| !(*entry1 == *entry2))
+    ).collect();
+
+    (column_names1, new_entries)
+}
+
+fn union(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
+    let (column_names1, mut entries1) = eval(expression1);
+    let (column_names2, mut entries2) = eval(expression2);
+
+    entries1.append(&mut entries2);
+
+    (column_names1, entries1)
 }
 
 fn read(filename: String) -> Table {
