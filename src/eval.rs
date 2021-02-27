@@ -28,7 +28,7 @@ fn select(expression: Box<Expression>, condition: Box<Condition>) -> Table {
 
 fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
     let (column_names, mut entries) = eval(expression);
-    let final_columns = HashMap::new();
+    let mut final_columns: HashMap<String, usize> = HashMap::new();
 
     // On regarde dans les premières positions celles qui peuvent être utilisées
     let mut canBeUsed = vec![true; columns.len()];
@@ -36,11 +36,11 @@ fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
         let index = *column_names.get(column).unwrap();
         if index < columns.len() {
             canBeUsed[index] = false;
-            final_columns[column] = index;
+            final_columns.insert(column.clone(), index);
         }
     }
 
-    let swaps = Vec::new();
+    let mut swaps = Vec::new();
 
     // on va associer tout ça comme il faut
     let mut i = 0;
@@ -56,13 +56,13 @@ fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
         }
 
         swaps.push((index, i));
-        final_columns[column] = i;
+        final_columns.insert(column.clone(), i);
         i += 1;
     }
 
-    for entry in entries {
-        for (i, j) in swaps {
-            entry.swap(i, j);
+    for entry in &mut entries {
+        for (i, j) in &swaps {
+            entry.swap(*i, *j);
         }
         entry.truncate(columns.len())
     }
@@ -85,12 +85,12 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
         }
     }
 
-    let final_columns = HashMap::new();
+    let mut final_columns = HashMap::new();
     for (key, value) in column_names1 {
-        final_columns[&key] = value;
+        final_columns.insert(key, value);
     }
     for (key, value) in column_names2 {
-        final_columns[&key] = value;
+        final_columns.insert(key, value);
     }
 
     (final_columns, final_entries)
