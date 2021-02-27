@@ -1,5 +1,7 @@
 use crate::types::*;
 use csv::Reader;
+use std::collections::HashMap;
+
 
 pub fn eval(expression: Box<Expression>) -> Table {
     match *expression {
@@ -9,47 +11,68 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Product(expr1, expr2) => product(expr1, expr2),
         Expression::Except(expr1, expr2) => minus(expr1, expr2),
         Expression::Union(expr1, expr2) => union(expr1, expr2),
+        Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs) => read_select_project_rename(filename, condition, old_attrs, new_attrs),
         Expression::Load(filename) => read(filename),
-        _ => (Vec::new(), Vec::new())
+        _ => (HashMap::new(), Vec::new())
     }
 }
 
 fn select(expression: Box<Expression>, condition: Box<Condition>) -> Table {
     let (column_names, entries) = eval(expression);
     let new_entries: Vec<Entry> = entries.into_iter().filter(
-        |entry| eval_condition(entry, &column_names, &condition) 
+        |entry| eval_condition(entry, &column_names, &condition)
     ).collect();
 
     (column_names, new_entries)
 }
 
 fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
-    let (mut column_names, mut entries) = eval(expression);
-    
-    for (i, column) in columns.iter().enumerate() {
-        let actual_pos = column_names.iter().position(|column_name| *column_name == *column).unwrap();
+    let (column_names, mut entries) = eval(expression);
+    let final_columns = HashMap::new();
 
-        if i == actual_pos {
-            continue; // on est déjà content
+    // On regarde dans les premières positions celles qui peuvent être utilisées
+    let mut canBeUsed = vec![true; columns.len()];
+    for column in columns.iter() {
+        let index = *column_names.get(column).unwrap();
+        if index < columns.len() {
+            canBeUsed[index] = false;
+            final_columns[column] = index;
         }
-
-        for entry in &mut entries {
-            entry.swap(i, actual_pos);
-        }
-        column_names.swap(i, actual_pos);
     }
 
-    // on enlève les champs en trop
-    for entry in &mut entries {
-        entry.truncate(columns.len());
+    let swaps = Vec::new();
+
+    // on va associer tout ça comme il faut
+    let mut i = 0;
+    for column in columns.iter() {
+        let index = *column_names.get(column).unwrap();
+        if index < columns.len() {
+            continue; // on est déjà bon, rien à faire
+        }
+
+        // sinon, on cherche une nouvelle position
+        while !canBeUsed[i] {
+            i += 1;
+        }
+
+        swaps.push((index, i));
+        final_columns[column] = i;
+        i += 1;
     }
 
-    (columns, entries)
+    for entry in entries {
+        for (i, j) in swaps {
+            entry.swap(i, j);
+        }
+        entry.truncate(columns.len())
+    }
+
+    (final_columns, entries)
 }
 
 fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
-    let (mut column_names1, entries1) = eval(expression1);
-    let (mut column_names2, entries2) = eval(expression2);
+    let (column_names1, entries1) = eval(expression1);
+    let (column_names2, entries2) = eval(expression2);
 
     let mut final_entries: Vec<Entry> = Vec::new();
 
@@ -61,9 +84,16 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
             final_entries.push(entry);
         }
     }
-    column_names1.append(&mut column_names2);
 
-    (column_names1, final_entries)
+    let final_columns = HashMap::new();
+    for (key, value) in column_names1 {
+        final_columns[&key] = value;
+    }
+    for (key, value) in column_names2 {
+        final_columns[&key] = value;
+    }
+
+    (final_columns, final_entries)
 }
 
 
@@ -89,9 +119,13 @@ fn union(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
 
 fn read(filename: String) -> Table {
     let mut rdr = Reader::from_path(filename).unwrap();
+    let mut column_names = HashMap::new();
 
-    let headers: Vec<String> = rdr.headers().unwrap().into_iter().map(|s| String::from(s)).collect();
-    let entries: Vec<Entry> = rdr.records().into_iter().map(
+    for (i, header) in rdr.headers().unwrap().into_iter().enumerate() {
+        column_names.insert(String::from(header), i);
+    }
+
+    let entries: Vec<Entry> = rdr.records().map(
         |record| record.unwrap().into_iter().map(
             |value| {
                 match value.parse::<i64>() {
@@ -102,10 +136,36 @@ fn read(filename: String) -> Table {
         ).collect()
     ).collect();
 
-    (headers, entries)
+    (column_names, entries)
 }
 
-fn eval_condition(entry: &Entry, column_names: &Vec<String>, condition: &Box<Condition>) -> bool {
+fn read_select_project_rename(filename: String, condition: Box<Condition>, old_attrs: Vec<String>, new_attrs: Vec<String>) -> Table {
+    let mut rdr = Reader::from_path(filename).unwrap();
+    let mut column_names = HashMap::new();
+
+    for (i, header) in rdr.headers().unwrap().into_iter().enumerate() {
+        column_names.insert(String::from(header), i);
+    }
+    let entries: Vec<Entry> = rdr.records().map(
+        |record| record.unwrap().into_iter()
+        .map(
+            |value| {
+                match value.parse::<i64>() {
+                    Ok(i) => Value::Int(i),
+                    Err(_) => Value::Str(String::from(value))
+                }
+            }
+        )
+        .collect()
+    )
+    .filter(|entry| eval_condition(entry, &column_names, &condition))
+    // .map(|entry| )
+    .collect();
+
+    (column_names, entries)
+}
+
+fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, condition: &Box<Condition>) -> bool {
     match &**condition {
         Condition::True => true,
         Condition::False => false,

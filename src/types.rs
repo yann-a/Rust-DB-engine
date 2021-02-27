@@ -1,4 +1,5 @@
 use serde_derive::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize)]
 pub enum Value {
@@ -20,7 +21,7 @@ impl Eq for Value {}
 
 pub type Entry = Vec<Value>;
 
-pub type Table = (Vec<String>, Vec<Entry>);
+pub type Table = (HashMap<String, usize>, Vec<Entry>);
 
 #[derive(Deserialize)]
 pub enum Condition {
@@ -48,5 +49,6 @@ pub enum Expression {
     Except(Box<Expression>, Box<Expression>),
     Union(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
+    ReadSelectProjectRename(String, Box<Condition>, Vec<String>, Vec<String>),
     Load(String)
 }
