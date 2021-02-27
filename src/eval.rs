@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 pub fn eval(expression: Box<Expression>) -> Table {
     match *expression {
-        Expression::Table(table) => table,
+        //Expression::Table(table) => table,
         Expression::Select(expression_from, condition) => select(expression_from, condition),
         Expression::Project(expression_from, columns) => project(expression_from, columns),
         Expression::Product(expr1, expr2) => product(expr1, expr2),
@@ -99,7 +99,7 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
 
 fn minus(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
     let (column_names1, entries1) = eval(expression1);
-    let (column_names2, entries2) = eval(expression2);
+    let (_column_names2, entries2) = eval(expression2);
 
     let new_entries = entries1.into_iter().filter(
         |entry1| entries2.iter().all(|entry2| !(*entry1 == *entry2))
@@ -110,7 +110,7 @@ fn minus(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
 
 fn union(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
     let (column_names1, mut entries1) = eval(expression1);
-    let (column_names2, mut entries2) = eval(expression2);
+    let (_column_names2, mut entries2) = eval(expression2);
 
     entries1.append(&mut entries2);
 
