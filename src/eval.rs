@@ -31,11 +31,11 @@ fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
     let mut final_columns: HashMap<String, usize> = HashMap::new();
 
     // On regarde dans les premières positions celles qui peuvent être utilisées
-    let mut canBeUsed = vec![true; columns.len()];
+    let mut can_be_used = vec![true; columns.len()];
     for column in columns.iter() {
         let index = *column_names.get(column).unwrap();
         if index < columns.len() {
-            canBeUsed[index] = false;
+            can_be_used[index] = false;
             final_columns.insert(column.clone(), index);
         }
     }
@@ -51,7 +51,7 @@ fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
         }
 
         // sinon, on cherche une nouvelle position
-        while !canBeUsed[i] {
+        while !can_be_used[i] {
             i += 1;
         }
 
