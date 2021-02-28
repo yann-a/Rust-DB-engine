@@ -11,6 +11,7 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Product(expr1, expr2) => product(expr1, expr2),
         Expression::Except(expr1, expr2) => minus(expr1, expr2),
         Expression::Union(expr1, expr2) => union(expr1, expr2),
+        Expression::Rename(expression, old_columns, new_columns) => renaming(expression, old_columns, new_columns),
         Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs) => read_select_project_rename(filename, condition, old_attrs, new_attrs),
         Expression::Load(filename) => read(filename),
         _ => (HashMap::new(), Vec::new())
@@ -96,6 +97,16 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
     (final_columns, final_entries)
 }
 
+fn renaming(expression: Box<Expression>, old_columns: Vec<String>, new_columns: Vec<String>) -> Table {
+    let (column_names, entries) = eval(expression);
+
+    let mut new_column_names = HashMap::new();
+    for (i, new_column) in new_columns.into_iter().enumerate() {
+        new_column_names.insert(new_column, *column_names.get(&old_columns[i]).unwrap());
+    }
+
+    (new_column_names, entries)
+}
 
 fn minus(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
     let (column_names1, entries1) = eval(expression1);
