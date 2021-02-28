@@ -1,5 +1,6 @@
 use serde_derive::Deserialize;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Deserialize)]
 pub enum Value {
@@ -50,5 +51,5 @@ pub enum Expression {
     Union(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
     ReadSelectProjectRename(String, Box<Condition>, Vec<String>, Vec<String>),
-    Load(String)
+    Load(String, Option<HashSet<String>>) // Optionally contains the columns to be loaded for future optimizations
 }

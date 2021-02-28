@@ -13,7 +13,7 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Union(expr1, expr2) => union(expr1, expr2),
         Expression::Rename(expression, old_columns, new_columns) => renaming(expression, old_columns, new_columns),
         Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs) => read_select_project_rename(filename, condition, old_attrs, new_attrs),
-        Expression::Load(filename) => read(filename),
+        Expression::Load(filename, _) => read(filename),
         _ => (HashMap::new(), Vec::new())
     }
 }
