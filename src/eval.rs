@@ -99,13 +99,16 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
 
 fn renaming(expression: Box<Expression>, old_columns: Vec<String>, new_columns: Vec<String>) -> Table {
     let (mut column_names, entries) = eval(expression);
+    rename_columns(&mut column_names, old_columns, new_columns);
 
+    (column_names, entries)
+}
+
+fn rename_columns(column_names: &mut HashMap<String, usize>, old_columns: Vec<String>, new_columns: Vec<String>) {
     for (i, new_column) in new_columns.into_iter().enumerate() {
         let index = column_names.remove(&old_columns[i]).unwrap();
         column_names.insert(new_column, index);
     }
-
-    (column_names, entries)
 }
 
 fn minus(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
@@ -170,8 +173,9 @@ fn read_select_project_rename(filename: String, condition: Box<Condition>, old_a
         .collect()
     )
     .filter(|entry| eval_condition(entry, &column_names, &condition))
-    // .map(|entry| )
     .collect();
+
+    rename_columns(&mut column_names, old_attrs, new_attrs);
 
     (column_names, entries)
 }
