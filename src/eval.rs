@@ -191,6 +191,16 @@ fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, conditio
                 (Value::Str(i), Value::Str(j)) => i == j,
                 _ => false
             },
+        Condition::Less(v1, v2) => 
+            match (get_value(entry, column_names, v1), get_value(entry, column_names, v2)) {
+                (Value::Int(i), Value::Int(j)) => i <= j,
+                _ => false
+            },
+        Condition::More(v1, v2) => 
+            match (get_value(entry, column_names, v1), get_value(entry, column_names, v2)) {
+                (Value::Int(i), Value::Int(j)) => i >= j,
+                _ => false
+            },
         _ => false
     }
 }
