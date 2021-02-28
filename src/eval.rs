@@ -98,14 +98,14 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
 }
 
 fn renaming(expression: Box<Expression>, old_columns: Vec<String>, new_columns: Vec<String>) -> Table {
-    let (column_names, entries) = eval(expression);
+    let (mut column_names, entries) = eval(expression);
 
-    let mut new_column_names = HashMap::new();
     for (i, new_column) in new_columns.into_iter().enumerate() {
-        new_column_names.insert(new_column, *column_names.get(&old_columns[i]).unwrap());
+        let index = column_names.remove(&old_columns[i]).unwrap();
+        column_names.insert(new_column, index);
     }
 
-    (new_column_names, entries)
+    (column_names, entries)
 }
 
 fn minus(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
