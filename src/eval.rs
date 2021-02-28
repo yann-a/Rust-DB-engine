@@ -185,6 +185,19 @@ fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, conditio
         Condition::True => true,
         Condition::False => false,
         Condition::And(c1, c2) => eval_condition(entry, column_names, &c1) && eval_condition(entry, column_names, &c2),
+        Condition::Equal(v1, v2) => 
+            match (get_value(entry, column_names, v1), get_value(entry, column_names, v2)) {
+                (Value::Int(i), Value::Int(j)) => i == j,
+                (Value::Str(i), Value::Str(j)) => i == j,
+                _ => false
+            },
         _ => false
+    }
+}
+
+fn get_value(entry: &Entry, column_names: &HashMap<String, usize>, value: &Value) -> Value {
+    match value {
+        Value::Column(s) => entry[*column_names.get(s).unwrap()].clone(),
+        v => v.clone()
     }
 }
