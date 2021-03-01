@@ -5,6 +5,7 @@ mod optimize;
 
 mod tests {
     pub mod eval_test;
+    pub mod optimize_test;
 }
 
 use crate::types::*;

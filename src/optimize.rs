@@ -163,7 +163,11 @@ fn apply_projections_early(expression: Box<Expression>, fields: Option<HashSet<S
             // DetectLoadColumnsOptimizer must be executed before
             let project_on = columns.as_ref().unwrap().into_iter().filter(|column| fields_set.contains(*column)).cloned().collect::<Vec<_>>();
 
-            Box::new(Expression::Project(expression, project_on))
+            if project_on.len() != columns.as_ref().unwrap().len() {
+                Box::new(Expression::Project(expression, project_on))
+            } else {
+                expression
+            }
         },
         Expression::Load(_, _) => expression
     }
