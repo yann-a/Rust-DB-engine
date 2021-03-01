@@ -87,10 +87,10 @@ fn product(expression1: Box<Expression>, expression2: Box<Expression>) -> Table 
     }
 
     let mut final_columns = HashMap::new();
-    for (key, value) in column_names1 {
-        final_columns.insert(key, value);
-    }
     for (key, value) in column_names2 {
+        final_columns.insert(key, column_names1.len()+value);
+    }
+    for (key, value) in column_names1 {
         final_columns.insert(key, value);
     }
 
