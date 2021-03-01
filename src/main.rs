@@ -3,6 +3,7 @@ mod eval;
 mod output;
 mod optimize;
 
+#[cfg(test)]
 mod tests {
     pub mod eval_test;
     pub mod optimize_test;
