@@ -10,15 +10,22 @@ use crate::optimize::*;
 
 fn main() {
     let expr = Box::new(Expression::Product(
+        Box::new(Expression::Load(String::from("project_spec/samples/projets.csv"), None)),
         Box::new(Expression::Project(
-            Box::new(Expression::Load(String::from("project_spec/samples/employes.csv"), None)), 
-            vec![String::from("dpt"), String::from("email")]
+            Box::new(Expression::Rename(
+                Box::new(Expression::Load(String::from("project_spec/samples/employes.csv"), None)),
+                vec![String::from("dpt")],
+                vec![String::from("test")]
+            )),
+            vec![String::from("test"), String::from("email")]
         )),
-        Box::new(Expression::Load(String::from("project_spec/samples/membres.csv"), None))
     ));
 
     // optimization phase
-    let optimizer = ChainOptimizer{optimizers: vec![ Box::new(DetectLoadColumnsOptimizer{}) ]};
+    let optimizer = ChainOptimizer{optimizers: vec![
+        Box::new(DetectLoadColumnsOptimizer{}),
+        Box::new(ApplyProjectionsEarlyOptimizer{}),
+    ]};
     let expr = optimizer.optimize(expr);
 
     let table = eval(expr);
