@@ -3,6 +3,10 @@ mod eval;
 mod output;
 mod optimize;
 
+mod tests {
+    pub mod eval_test;
+}
+
 use crate::types::*;
 use crate::eval::*;
 use crate::output::*;
