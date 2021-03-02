@@ -13,7 +13,7 @@ pub enum ConditionParse {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "lowercase", tag = "operation", content = "args")] 
+#[serde(tag = "operation", content = "args")] 
 pub enum ExpressionParse {
     #[serde(rename = "selection")]
     Select {object: Box<ExpressionParse>, condition: Box<ConditionParse>},
@@ -83,6 +83,7 @@ impl From<ExpressionParse> for Expression {
     }
 }
 
+#[allow(dead_code)]
 pub fn get_expression(json: &'static str) -> Expression {
     serde_json::from_str(json).unwrap()
 }
