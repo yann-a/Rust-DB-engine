@@ -85,11 +85,11 @@ impl From<ExpressionParse> for Expression {
 }
 
 #[allow(dead_code)]
-pub fn get_expression(json: &'static str) -> Expression {
+pub fn get_expression_from_str(json: &'static str) -> Expression {
     serde_json::from_str(json).unwrap()
 }
 
-pub fn get_expression_as_input(path: Option<String>) -> Expression {
+pub fn get_expression_from(path: Option<String>) -> Expression {
     match path {
         Some(filename) => {
             let file = File::open(filename).unwrap();

@@ -21,17 +21,11 @@ fn main() {
     // Read command-line arguments
     let args: Vec<String> = env::args().collect();
 
-    let source_file = match args.len() {
-        nbarg if nbarg >1 => Some(String::from(&args[1])),
-        _ => None
-    };
-    let output_file = match args.len() {
-        nbarg if nbarg>2 => Some(String::from(&args[2])),
-        _ => None
-    };
+    let source_file = if args.len() > 1 { Some(String::from(&args[1])) } else { None };
+    let output_file = if args.len() > 2 { Some(String::from(&args[2])) } else { None };
 
     // Get expression from json
-    let expr = Box::new(get_expression_as_input(source_file));
+    let expr = Box::new(get_expression_from(source_file));
 
     // Optimization phase
     let optimizer = ChainOptimizer{optimizers: vec![
