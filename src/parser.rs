@@ -22,7 +22,7 @@ pub enum ExpressionParse {
     Project {object: Box<ExpressionParse>, attributes: Vec<String>},
     #[serde(rename = "renaming")]
     Rename {object: Box<ExpressionParse>, #[serde(rename = "old attributes")] old_attributes: Vec<String>, #[serde(rename = "new attributes")] new_attributes: Vec<String>},
-    #[serde(rename = "exception")]
+    #[serde(rename = "minus")]
     Except {object1: Box<ExpressionParse>, object2: Box<ExpressionParse>},
     #[serde(rename = "union")]
     Union {object1: Box<ExpressionParse>, object2: Box<ExpressionParse>},
