@@ -1,5 +1,8 @@
 use crate::types::*;
+use std::fs::File;
+
 use serde_derive::Deserialize;
+use std::io::BufReader;
 
 #[derive(Deserialize)]
 #[serde(untagged)]
@@ -80,23 +83,10 @@ impl From<ExpressionParse> for Expression {
     }
 }
 
-pub fn read_json() -> Expression{
-    let json = r#"
-        {
-            "operation": "projection",
-            "args": {
-                "attributes": ["idp", "responsable"],
-                "object": {
-                    "operation": "load",
-                    "args": {
-                        "filename": "project_spec/samples/projets.csv"
-                    }
-                }
-            }
-        }
-    "#;
+pub fn get_expression_from_file(path: String) -> Expression{
+    let file = File::open(path).unwrap();
+    let reader = BufReader::new(file);
 
-    let request: Expression = serde_json::from_str(json).unwrap();
-
-    request
+    let u: Expression = serde_json::from_reader(reader).unwrap();
+    u
 }

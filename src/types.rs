@@ -29,8 +29,6 @@ pub type Table = (HashMap<String, usize>, Vec<Entry>);
 
 #[derive(Debug)]
 pub enum Condition {
-    True,
-    False,
     Not(Box<Condition>),
     Or(Box<Condition>, Box<Condition>),
     And(Box<Condition>, Box<Condition>),

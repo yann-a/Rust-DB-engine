@@ -182,8 +182,6 @@ fn read_select_project_rename(filename: String, condition: Box<Condition>, old_a
 
 fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, condition: &Box<Condition>) -> bool {
     match &**condition {
-        Condition::True => true,
-        Condition::False => false,
         Condition::And(c1, c2) => eval_condition(entry, column_names, &c1) && eval_condition(entry, column_names, &c2),
         Condition::Equal(v1, v2) => 
             match (get_value(entry, column_names, v1), get_value(entry, column_names, v2)) {

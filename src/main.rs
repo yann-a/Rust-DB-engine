@@ -16,8 +16,10 @@ use crate::output::*;
 use crate::optimize::*;
 use crate::parser::*;
 
+use std::env;
+
 fn main() {
-    let expr = Box::new(Expression::Product(
+    let _expr = Box::new(Expression::Product(
         Box::new(Expression::Load(String::from("project_spec/samples/projets.csv"), None)),
         Box::new(Expression::Project(
             Box::new(Expression::Rename(
@@ -28,16 +30,22 @@ fn main() {
             vec![String::from("test"), String::from("email")]
         )),
     ));
+    // Read command-line arguments
+    let args: Vec<String> = env::args().collect();
+    let source_file = &args[1];
+    let _output_file = &args[2];
 
-    let expr = Box::new(read_json());
+    // Get expression from json
+    let expr = Box::new(get_expression_from_file(String::from(source_file)));
 
-    // optimization phase
+    // Optimization phase
     let optimizer = ChainOptimizer{optimizers: vec![
         Box::new(DetectLoadColumnsOptimizer{}),
         Box::new(ApplyProjectionsEarlyOptimizer{}),
     ]};
     let expr = optimizer.optimize(expr);
 
+    // Eval and print result
     let table = eval(expr);
     print_table(table);
 }
