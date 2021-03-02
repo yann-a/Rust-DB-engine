@@ -20,7 +20,7 @@ pub enum ExpressionParse {
     #[serde(rename = "projection")]
     Project {object: Box<ExpressionParse>, attributes: Vec<String>},
     #[serde(rename = "renaming")]
-    Rename {object: Box<ExpressionParse>, old_attributes: Vec<String>, new_attributes: Vec<String>},
+    Rename {object: Box<ExpressionParse>, #[serde(rename = "old attributes")] old_attributes: Vec<String>, #[serde(rename = "new attributes")] new_attributes: Vec<String>},
     #[serde(rename = "exception")]
     Except {object1: Box<ExpressionParse>, object2: Box<ExpressionParse>},
     #[serde(rename = "union")]
@@ -30,7 +30,7 @@ pub enum ExpressionParse {
     #[serde(rename = "load")]
     Read {filename: String},
     #[serde(rename = "rspr")]
-    ReadSelectProjectRename {filename: String, condition: Box<ConditionParse>, old_attributes: Vec<String>, new_attributes: Vec<String>},
+    ReadSelectProjectRename {filename: String, condition: Box<ConditionParse>, #[serde(rename = "old attributes")] old_attributes: Vec<String>, #[serde(rename = "new attributes")] new_attributes: Vec<String>},
 }
 
 impl From<ConditionParse> for Condition {
