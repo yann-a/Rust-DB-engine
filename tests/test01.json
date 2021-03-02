@@ -1,0 +1,30 @@
+{
+	"operation": "product",
+	"args": {
+		"object1": {
+			"operation": "load",
+			"args": {
+				"filename": "project_spec/samples/projets.csv"
+			}
+		},
+		"object2": {
+			"operation": "projection",
+			"args": {
+				"object": {
+					"operation": "renaming",
+					"args": {
+						"object": {
+							"operation": "load",
+							"args": {
+								"filename": "project_spec/samples/employes.csv"
+							}
+						},
+						"old attributes": ["dpt"],
+						"new attributes": ["test"]
+					}
+				},
+				"attributes": ["test", "email"]
+			}
+		}
+	}
+}

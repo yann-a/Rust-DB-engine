@@ -10,7 +10,6 @@ mod tests {
     pub mod optimize_test;
 }
 
-use crate::types::*;
 use crate::eval::*;
 use crate::output::*;
 use crate::optimize::*;
@@ -19,17 +18,6 @@ use crate::parser::*;
 use std::env;
 
 fn main() {
-    let _expr = Box::new(Expression::Product(
-        Box::new(Expression::Load(String::from("project_spec/samples/projets.csv"), None)),
-        Box::new(Expression::Project(
-            Box::new(Expression::Rename(
-                Box::new(Expression::Load(String::from("project_spec/samples/employes.csv"), None)),
-                vec![String::from("dpt")],
-                vec![String::from("test")]
-            )),
-            vec![String::from("test"), String::from("email")]
-        )),
-    ));
     // Read command-line arguments
     let args: Vec<String> = env::args().collect();
     let source_file = &args[1];
@@ -48,7 +36,7 @@ fn main() {
     ]};
     let expr = optimizer.optimize(expr);
 
-    // Eval and print result
+    // Eval and print/write result
     let table = eval(expr);
     match output_file {
         Some(filename) => write_table(table, filename),
