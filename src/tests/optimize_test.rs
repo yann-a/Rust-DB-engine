@@ -29,7 +29,7 @@ fn test_apply_projections_early() {
     ]};
     let expression = optimizer.optimize(expression);
 
-    let expected = Box::new(get_expression(
+    let expected = get_expression(
         r#"{
             "operation": "renaming",
             "args": {
@@ -47,7 +47,7 @@ fn test_apply_projections_early() {
             }
         }}
         "#
-    ));
+    );
 
-    assert_eq!(*expression, *expected);
+    assert_eq!(*expression, expected);
 }

@@ -1,10 +1,10 @@
 use crate::types::*;
 use std::fs::File;
 
-use serde_derive::{Serialize,Deserialize};
+use serde_derive::Deserialize;
 use std::io::BufReader;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize)]
 #[serde(untagged)]
 pub enum ConditionParse {
     Log1 {logical: String, condition: Box<ConditionParse>},
@@ -12,7 +12,7 @@ pub enum ConditionParse {
     Comp {comparator: String, attribute1: String, attribute2: String}
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "lowercase", tag = "operation", content = "args")] 
 pub enum ExpressionParse {
     #[serde(rename = "selection")]
