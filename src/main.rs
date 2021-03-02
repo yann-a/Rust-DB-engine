@@ -20,14 +20,18 @@ use std::env;
 fn main() {
     // Read command-line arguments
     let args: Vec<String> = env::args().collect();
-    let source_file = &args[1];
-    let mut output_file: Option<String> = None;
-    if args.len() > 2 {
-        output_file = Some(String::from(&args[2]));
-    }
+
+    let source_file = match args.len() {
+        nbarg if nbarg >1 => Some(String::from(&args[1])),
+        _ => None
+    };
+    let output_file = match args.len() {
+        nbarg if nbarg>2 => Some(String::from(&args[2])),
+        _ => None
+    };
 
     // Get expression from json
-    let expr = Box::new(get_expression_from_file(String::from(source_file)));
+    let expr = Box::new(get_expression_as_input(source_file));
 
     // Optimization phase
     let optimizer = ChainOptimizer{optimizers: vec![

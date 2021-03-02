@@ -3,6 +3,7 @@ use std::fs::File;
 
 use serde_derive::Deserialize;
 use std::io::BufReader;
+use std::io::{self, Read};
 
 #[derive(Deserialize)]
 #[serde(untagged)]
@@ -88,10 +89,18 @@ pub fn get_expression(json: &'static str) -> Expression {
     serde_json::from_str(json).unwrap()
 }
 
-pub fn get_expression_from_file(path: String) -> Expression {
-    let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
+pub fn get_expression_as_input(path: Option<String>) -> Expression {
+    match path {
+        Some(filename) => {
+            let file = File::open(filename).unwrap();
+            
+            serde_json::from_reader(BufReader::new(file)).unwrap()
+        },
+        None => {
+            let mut buffer = String::new();
+            io::stdin().read_to_string(&mut buffer).unwrap();
 
-    let u: Expression = serde_json::from_reader(reader).unwrap();
-    u
+            serde_json::from_str(&buffer).unwrap()
+        }
+    }
 }
