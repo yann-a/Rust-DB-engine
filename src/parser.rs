@@ -1,10 +1,10 @@
 use crate::types::*;
 use std::fs::File;
 
-use serde_derive::Deserialize;
+use serde_derive::{Serialize,Deserialize};
 use std::io::BufReader;
 
-#[derive(Deserialize)]
+#[derive(Serialize,Deserialize)]
 #[serde(untagged)]
 pub enum ConditionParse {
     Log1 {logical: String, condition: Box<ConditionParse>},
@@ -12,7 +12,7 @@ pub enum ConditionParse {
     Comp {comparator: String, attribute1: String, attribute2: String}
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize,Deserialize)]
 #[serde(rename_all = "lowercase", tag = "operation", content = "args")] 
 pub enum ExpressionParse {
     #[serde(rename = "selection")]
@@ -83,7 +83,11 @@ impl From<ExpressionParse> for Expression {
     }
 }
 
-pub fn get_expression_from_file(path: String) -> Expression{
+pub fn get_expression(json: &'static str) -> Expression {
+    serde_json::from_str(json).unwrap()
+}
+
+pub fn get_expression_from_file(path: String) -> Expression {
     let file = File::open(path).unwrap();
     let reader = BufReader::new(file);
 

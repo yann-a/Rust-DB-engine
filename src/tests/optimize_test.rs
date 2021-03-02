@@ -1,16 +1,25 @@
 use crate::optimize::*;
-use crate::types::*;
+use crate::parser::*;
 
 #[test]
 fn test_apply_projections_early() {
-    //Available columns: idp,titre,responsable
-    let expression = Box::new(Expression::Project(
-        Box::new(Expression::Rename(
-            Box::new(Expression::Load("project_spec/samples/projets.csv".to_string(), None)),
-            vec![String::from("idp")],
-            vec![String::from("truc")]
-        )),
-        vec!["truc".to_string(), "responsable".to_string()]
+    let expression = Box::new(get_expression(
+        r#"
+        {"operation": "projection", "args": {
+            "attributes": ["truc", "responsable"],
+            "object": {
+                "operation": "renaming",
+                "args": {
+                    "old attributes": ["idp"],
+                    "new attributes": ["truc"],
+                    "object": {
+                        "operation": "load",
+                        "args": { "filename": "project_spec/samples/projets.csv"}
+                    }
+                }
+            }
+        }}
+        "#
     ));
 
     // optimize this expression
@@ -20,15 +29,25 @@ fn test_apply_projections_early() {
     ]};
     let expression = optimizer.optimize(expression);
 
-    match *expression {
-        Expression::Rename(project_on, _, _) =>
-            match *project_on {
-                Expression::Project(_, mut fields) => {
-                    fields.sort();
-                    assert_eq!(fields, vec!["idp", "responsable"]);
-                },
-                _ => panic!("Expected a rename expression")
-            },
-        _ => panic!("Expected a rename expression")
-    }
+    let expected = Box::new(get_expression(
+        r#"{
+            "operation": "renaming",
+            "args": {
+                "old attributes": ["idp"],
+                "new attributes": ["truc"],
+                "object": {
+                    "operation": "projection", 
+                    "args": {
+                        "attributes": ["idp", "responsable"],
+                        "object": {
+                        "operation": "load",
+                        "args": { "filename": "project_spec/samples/projets.csv"}
+                    }
+                }
+            }
+        }}
+        "#
+    ));
+
+    assert_eq!(*expression, *expected);
 }
