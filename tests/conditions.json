@@ -1,0 +1,24 @@
+{
+    "operation": "selection",
+    "args": {
+        "object": {
+            "operation": "load",
+            "args": {
+                "filename": "project_spec/samples/membres.csv"
+            }
+        },
+        "condition": {
+            "logical": "or",
+            "condition1": {
+                "comparator": "=",
+                "attribute1": "idp",
+                "attribute2": "5"
+            },
+            "condition2": {
+                "comparator": ">",
+                "attribute1": "idp",
+                "attribute2": "ide"
+            }
+        }
+    }
+}
