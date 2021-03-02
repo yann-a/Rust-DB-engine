@@ -1,6 +1,9 @@
+use crate::parser::*;
+
 use serde_derive::Deserialize;
 use std::collections::HashMap;
 use std::collections::HashSet;
+
 
 #[derive(Debug, Clone, Deserialize)]
 pub enum Value {
@@ -24,10 +27,11 @@ pub type Entry = Vec<Value>;
 
 pub type Table = (HashMap<String, usize>, Vec<Entry>);
 
-#[derive(Deserialize)]
+#[derive(Debug)]
 pub enum Condition {
     True,
     False,
+    Not(Box<Condition>),
     Or(Box<Condition>, Box<Condition>),
     And(Box<Condition>, Box<Condition>),
     Less(Box<Value>, Box<Value>),
@@ -35,18 +39,12 @@ pub enum Condition {
     More(Box<Value>, Box<Value>)
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "lowercase", tag = "operation", content = "args")] 
+#[derive(Deserialize, Debug)]
+#[serde(from = "ExpressionParse")] 
 pub enum Expression {
-    //#[serde(skip)]
-    //Table(Table),
-    #[serde(rename="selection")]
     Select(Box<Expression>, Box<Condition>),
-    #[serde(rename="projection")]
     Project(Box<Expression>, Vec<String>), // expression, column names
-    #[serde(rename="renaming")]
     Rename(Box<Expression>, Vec<String>, Vec<String>), // expression, old column names, new column names
-    #[serde(rename="minus")]
     Except(Box<Expression>, Box<Expression>),
     Union(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),

@@ -61,6 +61,7 @@ impl Optimizer for DetectLoadColumnsOptimizer {
 fn columns_used_in_condition(condition: &Box<Condition>, fields: &mut HashSet<String>) {
     match condition.as_ref() {
         Condition::True | Condition::False => (),
+        Condition::Not(c) => columns_used_in_condition(c, fields),
         Condition::And(c1, c2) | Condition::Or(c1, c2) => {
             columns_used_in_condition(c1, fields);
             columns_used_in_condition(c2, fields);

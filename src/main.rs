@@ -2,6 +2,7 @@ mod types;
 mod eval;
 mod output;
 mod optimize;
+mod parser;
 
 #[cfg(test)]
 mod tests {
@@ -13,6 +14,7 @@ use crate::types::*;
 use crate::eval::*;
 use crate::output::*;
 use crate::optimize::*;
+use crate::parser::*;
 
 fn main() {
     let expr = Box::new(Expression::Product(
@@ -26,6 +28,8 @@ fn main() {
             vec![String::from("test"), String::from("email")]
         )),
     ));
+
+    let expr = Box::new(read_json());
 
     // optimization phase
     let optimizer = ChainOptimizer{optimizers: vec![
