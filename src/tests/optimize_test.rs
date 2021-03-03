@@ -3,7 +3,7 @@ use crate::parser::*;
 
 #[test]
 fn test_apply_projections_early() {
-    let expression = Box::new(get_expression(
+    let expression = Box::new(get_expression_from_str(
         r#"
         {"operation": "projection", "args": {
             "attributes": ["truc", "responsable"],
@@ -29,7 +29,7 @@ fn test_apply_projections_early() {
     ]};
     let expression = optimizer.optimize(expression);
 
-    let expected = get_expression(
+    let expected = get_expression_from_str(
         r#"{
             "operation": "renaming",
             "args": {

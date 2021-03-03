@@ -3,6 +3,7 @@ use std::fs::File;
 
 use serde_derive::Deserialize;
 use std::io::BufReader;
+use std::io::{self, Read};
 
 #[derive(Deserialize)]
 #[serde(untagged)]
@@ -13,7 +14,7 @@ pub enum ConditionParse {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "lowercase", tag = "operation", content = "args")] 
+#[serde(tag = "operation", content = "args")] 
 pub enum ExpressionParse {
     #[serde(rename = "selection")]
     Select {object: Box<ExpressionParse>, condition: Box<ConditionParse>},
@@ -21,7 +22,7 @@ pub enum ExpressionParse {
     Project {object: Box<ExpressionParse>, attributes: Vec<String>},
     #[serde(rename = "renaming")]
     Rename {object: Box<ExpressionParse>, #[serde(rename = "old attributes")] old_attributes: Vec<String>, #[serde(rename = "new attributes")] new_attributes: Vec<String>},
-    #[serde(rename = "exception")]
+    #[serde(rename = "minus")]
     Except {object1: Box<ExpressionParse>, object2: Box<ExpressionParse>},
     #[serde(rename = "union")]
     Union {object1: Box<ExpressionParse>, object2: Box<ExpressionParse>},
@@ -83,14 +84,23 @@ impl From<ExpressionParse> for Expression {
     }
 }
 
-pub fn get_expression(json: &'static str) -> Expression {
+#[allow(dead_code)]
+pub fn get_expression_from_str(json: &'static str) -> Expression {
     serde_json::from_str(json).unwrap()
 }
 
-pub fn get_expression_from_file(path: String) -> Expression {
-    let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
+pub fn get_expression_from(path: Option<String>) -> Expression {
+    match path {
+        Some(filename) => {
+            let file = File::open(filename).unwrap();
+            
+            serde_json::from_reader(BufReader::new(file)).unwrap()
+        },
+        None => {
+            let mut buffer = String::new();
+            io::stdin().read_to_string(&mut buffer).unwrap();
 
-    let u: Expression = serde_json::from_reader(reader).unwrap();
-    u
+            serde_json::from_str(&buffer).unwrap()
+        }
+    }
 }
