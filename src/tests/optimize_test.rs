@@ -102,3 +102,59 @@ fn test_push_down_selections() {
 
     assert_eq!(*expression, expected);
 }
+
+
+#[test]
+fn test_push_down_selections_with_products() {
+    let expression = Box::new(get_expression_from_str(
+        r#"
+        {"operation": "selection", "args": {
+            "condition": {"comparator": "<", "attribute1": "idp", "attribute2": "idp"},
+            "object": {
+                "operation": "product",
+                "args": {
+                    "object1": {
+                        "operation": "load",
+                        "args": { "filename": "project_spec/samples/projets.csv"}
+                    },
+                    "object2": {
+                        "operation": "load",
+                        "args": { "filename": "project_spec/samples/departements.csv"}
+                    }
+                }
+            }
+        }}
+        "#
+    ));
+
+    // optimize this expression
+    let optimizer = ChainOptimizer{optimizers: vec![
+        Box::new(DetectLoadColumnsOptimizer{}),
+        Box::new(PushDownSelectionsOptimizer{}),
+    ]};
+    let expression = optimizer.optimize(expression);
+
+    let expected = get_expression_from_str(
+        r#"{
+            "operation": "product",
+            "args": {
+                "object2": {
+                    "operation": "load",
+                    "args": { "filename": "project_spec/samples/departements.csv"}
+                },
+                "object1": {
+                    "operation": "selection", 
+                    "args": {
+                        "condition": {"comparator": "<", "attribute1": "idp", "attribute2": "idp"},
+                        "object": {
+                        "operation": "load",
+                        "args": { "filename": "project_spec/samples/projets.csv"}
+                    }
+                }
+            }
+        }}
+        "#
+    );
+
+    assert_eq!(*expression, expected);
+}
