@@ -58,9 +58,9 @@ impl From<ConditionParse> for Condition {
                 };
 
                 match &c[..] {
-                    "=" => Condition::Equal(Box::new(v1), Box::new(v2)),
-                    "<" => Condition::Less(Box::new(v1), Box::new(v2)),
-                    ">" => Condition::More(Box::new(v1), Box::new(v2)),
+                    "=" => Condition::Equal(v1, v2),
+                    "<" => Condition::Less(v1, v2),
+                    ">" => Condition::More(v1, v2),
                     _ => panic!(format!("unknown comparator {}", c))
                 }
             }

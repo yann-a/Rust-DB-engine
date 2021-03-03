@@ -1,6 +1,7 @@
 use crate::types::*;
 use csv::Reader;
 use std::collections::HashSet;
+use std::collections::HashMap;
 
 pub trait Optimizer {
     fn optimize(&self, expression: Box<Expression>) -> Box<Expression>;
@@ -57,6 +58,39 @@ impl Optimizer for DetectLoadColumnsOptimizer {
         }
     }
 }
+/**
+ * Compute the columns exposed by a given expression.
+ */
+fn get_exposed_columns(expression: &Box<Expression>) -> HashSet<String> {
+    match &**expression {
+        // Si on n'a pas besoin de tous les fields après, on regarde si on a besoin de nouveau fields pour la condition
+        Expression::Select(expression_from, _) => get_exposed_columns(&expression_from),
+        Expression::Project(_, columns) => columns.iter().cloned().collect(),
+        Expression::Product(expr1, expr2) => {
+            // Pour les product, on dit qu'on "utilise" un sur ensemble de fields, et on corrige les problèmes dans les load et rename
+            let mut fields1 = get_exposed_columns(&expr1);
+            let fields2 = get_exposed_columns(&expr2);
+
+            fields1.extend(fields2);
+
+            fields1
+        },
+        Expression::Except(expr1, _) => get_exposed_columns(&expr1),
+        Expression::Union(expr1, _) => get_exposed_columns(&expr1),
+        Expression::Rename(expression, old_columns, new_columns) => {
+            let mut fields = get_exposed_columns(&expression);
+
+            for i in 0..old_columns.len() {
+                fields.remove(&old_columns[i]);
+                fields.insert(new_columns[i].clone());
+            }
+
+            fields
+        },
+        Expression::ReadSelectProjectRename(_, _, _, new_attributes) => new_attributes.iter().cloned().collect(),
+        Expression::Load(_, columns) => columns.as_ref().unwrap().iter().cloned().collect()
+    }
+}
 
 fn columns_used_in_condition(condition: &Box<Condition>, fields: &mut HashSet<String>) {
     match condition.as_ref() {
@@ -66,15 +100,39 @@ fn columns_used_in_condition(condition: &Box<Condition>, fields: &mut HashSet<St
             columns_used_in_condition(c2, fields);
         },
         Condition::Equal(v1, v2) | Condition::Less(v1, v2) | Condition::More(v1, v2) => {
-            match v1.as_ref() {
+            match v1 {
                 Value::Column(s) => { fields.insert(s.clone()); () },
                 _ => ()
             }
-            match v2.as_ref() {
+            match v2 {
                 Value::Column(s) => { fields.insert(s.clone()); () },
                 _ => ()
             }
         }
+    }
+}
+
+fn rename_value(value: Value, rename_map: &HashMap<String, String>) -> Value {
+    match value {
+        Value::Column(ref s) => { 
+            match rename_map.get(s) {
+                None => value,
+                Some(new_name) => Value::Column(new_name.clone())
+
+            }
+        },
+        _ => value
+    }
+}
+
+fn rename_in_condition(condition: Box<Condition>, rename_map: &HashMap<String, String>) -> Box<Condition> {
+    match *condition {
+        Condition::Not(c) => Box::new(Condition::Not(rename_in_condition(c, rename_map))),
+        Condition::And(c1, c2) => Box::new(Condition::And(rename_in_condition(c1, rename_map), rename_in_condition(c2, rename_map))),
+        Condition::Or(c1, c2) => Box::new(Condition::And(rename_in_condition(c1, rename_map), rename_in_condition(c2, rename_map))),
+        Condition::Equal(v1, v2) => Box::new(Condition::Equal(rename_value(v1, rename_map), rename_value(v2, rename_map))),
+        Condition::Less(v1, v2) => Box::new(Condition::Less(rename_value(v1, rename_map), rename_value(v2, rename_map))),
+        Condition::More(v1, v2) => Box::new(Condition::More(rename_value(v1, rename_map), rename_value(v2, rename_map))),
     }
 }
 
@@ -180,5 +238,78 @@ pub struct ApplyProjectionsEarlyOptimizer { }
 impl Optimizer for ApplyProjectionsEarlyOptimizer {
     fn optimize(&self, expression: Box<Expression>) -> Box<Expression> {
         apply_projections_early(expression, None)
+    }
+}
+
+/**
+ * Try to push down selections.
+ */
+fn push_down_selections(mut expression: Box<Expression>, mut selections: Vec<(Box<Condition>, HashSet<String>)>) -> Box<Expression> {
+    match *expression {
+        // Si on n'a pas besoin de tous les fields après, on regarde si on a besoin de nouveau fields pour la condition
+        Expression::Select(expression_from, condition) => {
+            let mut fields = HashSet::new();
+            columns_used_in_condition(&condition, &mut fields);
+            selections.push((condition, fields));
+
+            push_down_selections(expression_from, selections)
+        },
+        Expression::Project(expression_from, columns) => Box::new(Expression::Project(push_down_selections(expression_from, selections), columns)),
+        Expression::Product(expr1, expr2) => {
+            let fields1 = get_exposed_columns(&expr1);
+
+            // on voit si on peut remonter certaines conditions
+            let (selections1, selections): (Vec<_>, Vec<_>) = selections.into_iter().partition(|(_, fields)| fields.iter().all(|field| fields1.contains(field)));
+            let (selections2, selections): (Vec<_>, Vec<_>) = selections.into_iter().partition(|(_, fields)| fields.iter().all(|field| !fields1.contains(field)));
+
+            let mut new_expr = Box::new(Expression::Product(push_down_selections(expr1, selections1), push_down_selections(expr2, selections2)));
+
+            for (condition, _) in selections {
+                new_expr = Box::new(Expression::Select(new_expr, condition));
+            }
+
+            new_expr
+        }, 
+        Expression::Except(expr1, expr2) => Box::new(Expression::Except(
+            push_down_selections(expr1, selections.clone()),
+            push_down_selections(expr2, selections)
+        )),
+        Expression::Union(expr1, expr2) => Box::new(Expression::Union(
+            push_down_selections(expr1, selections.clone()),
+            push_down_selections(expr2, selections)
+        )),
+        Expression::Rename(expression, old_columns, new_columns) => {
+            let mut rename_map = HashMap::new();
+            for i in 0..old_columns.len() {
+                rename_map.insert(new_columns[i].clone(), old_columns[i].clone());
+            }
+
+            let updated_selections = selections.into_iter().map(|(condition, fields)| {
+                (rename_in_condition(condition, &rename_map), fields.into_iter().map(|field| {
+                    match rename_map.get(&field) {
+                        None => field,
+                        Some(new_name) => new_name.clone(),
+                    }
+                }).collect())
+            }).collect();
+
+            Box::new(Expression::Rename(push_down_selections(expression, updated_selections), old_columns, new_columns))
+        },
+        Expression::ReadSelectProjectRename(_, _, _, _) => (expression), // TODO: support this
+        Expression::Load(_, _) => {
+            // Reapply selections
+            for (condition, _) in selections {
+                expression = Box::new(Expression::Select(expression, condition));
+            }
+
+            expression
+        }
+    }
+}
+
+pub struct PushDownSelectionsOptimizer { }
+impl Optimizer for PushDownSelectionsOptimizer {
+    fn optimize(&self, expression: Box<Expression>) -> Box<Expression> {
+        push_down_selections(expression, Vec::new())
     }
 }

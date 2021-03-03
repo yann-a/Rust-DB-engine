@@ -172,8 +172,11 @@ fn read_select_project_rename(filename: String, condition: Box<Condition>, old_a
         )
         .collect()
     )
-    .filter(|entry| eval_condition(entry, &column_names, &condition))
+    // chaining map, then filter is optimized by rust
+    .filter(|entry| eval_condition(entry, &column_names, &condition)) 
     .collect();
+
+    // TODO: do the projection
 
     rename_columns(&mut column_names, old_attrs, new_attrs);
 

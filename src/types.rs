@@ -27,14 +27,14 @@ pub type Entry = Vec<Value>;
 
 pub type Table = (HashMap<String, usize>, Vec<Entry>);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Condition {
     Not(Box<Condition>),
     Or(Box<Condition>, Box<Condition>),
     And(Box<Condition>, Box<Condition>),
-    Less(Box<Value>, Box<Value>),
-    Equal(Box<Value>, Box<Value>),
-    More(Box<Value>, Box<Value>)
+    Less(Value, Value),
+    Equal(Value, Value),
+    More(Value, Value)
 }
 
 impl PartialEq for Condition {
@@ -45,7 +45,7 @@ impl PartialEq for Condition {
                 (Condition::And(c11, c12), Condition::And(c21, c22)) => *c11==*c21 && *c12 == *c22,
             (Condition::Less(v11, v12), Condition::Less(v21, v22)) |
                 (Condition::Equal(v11, v12), Condition::Equal(v21, v22)) |
-                (Condition::More(v11, v12), Condition::More(v21, v22)) => *v11==*v21 && *v12 == *v22,
+                (Condition::More(v11, v12), Condition::More(v21, v22)) => v11==v21 && v12 == v22,
             (_, _) => false
         }
     }
