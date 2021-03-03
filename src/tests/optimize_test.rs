@@ -109,7 +109,7 @@ fn test_push_down_selections_with_products() {
     let expression = Box::new(get_expression_from_str(
         r#"
         {"operation": "selection", "args": {
-            "condition": {"comparator": "<", "attribute1": "idp", "attribute2": "idp"},
+            "condition": {"comparator": "=", "attribute1": "idp", "attribute2": "idp"},
             "object": {
                 "operation": "product",
                 "args": {
@@ -135,7 +135,8 @@ fn test_push_down_selections_with_products() {
     let expression = optimizer.optimize(expression);
 
     let expected = get_expression_from_str(
-        r#"{
+        r#"
+        {
             "operation": "product",
             "args": {
                 "object2": {
@@ -145,7 +146,7 @@ fn test_push_down_selections_with_products() {
                 "object1": {
                     "operation": "selection", 
                     "args": {
-                        "condition": {"comparator": "<", "attribute1": "idp", "attribute2": "idp"},
+                        "condition": {"comparator": "=", "attribute1": "idp", "attribute2": "idp"},
                         "object": {
                         "operation": "load",
                         "args": { "filename": "project_spec/samples/projets.csv"}

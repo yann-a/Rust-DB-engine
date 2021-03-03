@@ -30,6 +30,7 @@ fn main() {
     // Optimization phase
     let optimizer = ChainOptimizer{optimizers: vec![
         Box::new(DetectLoadColumnsOptimizer{}),
+        Box::new(PushDownSelectionsOptimizer{}),
         Box::new(ApplyProjectionsEarlyOptimizer{}),
     ]};
     let expr = optimizer.optimize(expr);
