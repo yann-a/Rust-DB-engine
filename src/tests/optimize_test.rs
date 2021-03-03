@@ -54,7 +54,7 @@ fn test_apply_projections_early() {
 
 #[test]
 fn test_push_down_selections() {
-    let expression = Box::new(get_expression(
+    let expression = Box::new(get_expression_from_str(
         r#"
         {"operation": "selection", "args": {
             "condition": {"comparator": "<", "attribute1": "truc", "attribute2": "truc"},
@@ -80,7 +80,7 @@ fn test_push_down_selections() {
     ]};
     let expression = optimizer.optimize(expression);
 
-    let expected = get_expression(
+    let expected = get_expression_from_str(
         r#"{
             "operation": "renaming",
             "args": {
