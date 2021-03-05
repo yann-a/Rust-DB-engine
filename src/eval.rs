@@ -27,8 +27,8 @@ fn select(expression: Box<Expression>, condition: Box<Condition>) -> Table {
     (column_names, new_entries)
 }
 
-fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
-    let (column_names, mut entries) = eval(expression);
+fn swaps_for_projection(column_names: &HashMap<String, usize>, columns: &Vec<String>) -> (Vec<(usize, usize)>, HashMap<String, usize>) {
+
     let mut final_columns: HashMap<String, usize> = HashMap::new();
 
     // On regarde dans les premières positions celles qui peuvent être utilisées
@@ -60,6 +60,14 @@ fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
         final_columns.insert(column.clone(), i);
         i += 1;
     }
+
+    (swaps, final_columns)
+}
+
+fn project(expression: Box<Expression>, columns: Vec<String>) -> Table {
+    let (column_names, mut entries) = eval(expression);
+
+    let (swaps, final_columns) = swaps_for_projection(&column_names, &columns);
 
     for entry in &mut entries {
         for (i, j) in &swaps {
@@ -160,27 +168,36 @@ fn read_select_project_rename(filename: String, condition: Box<Condition>, old_a
     for (i, header) in rdr.headers().unwrap().into_iter().enumerate() {
         column_names.insert(String::from(header), i);
     }
+
+    let (swaps, mut final_columns) = swaps_for_projection(&column_names, &old_attrs);
     let entries: Vec<Entry> = rdr.records().map(
-        |record| record.unwrap().into_iter()
-        .map(
-            |value| {
-                match value.parse::<i64>() {
-                    Ok(i) => Value::Int(i),
-                    Err(_) => Value::Str(String::from(value))
+        |record| {
+            let mut record : Vec<_> = record.unwrap().into_iter()
+            .map(
+                |value| {
+                    match value.parse::<i64>() {
+                        Ok(i) => Value::Int(i),
+                        Err(_) => Value::Str(String::from(value))
+                    }
                 }
+            )
+            .collect();
+
+            for (i, j) in &swaps {
+                record.swap(*i, *j);
             }
-        )
-        .collect()
+            record.truncate(old_attrs.len());
+
+            record
+        }
     )
     // chaining map, then filter is optimized by rust
     .filter(|entry| eval_condition(entry, &column_names, &condition)) 
     .collect();
 
-    // TODO: do the projection
+    rename_columns(&mut final_columns, old_attrs, new_attrs);
 
-    rename_columns(&mut column_names, old_attrs, new_attrs);
-
-    (column_names, entries)
+    (final_columns, entries)
 }
 
 fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, condition: &Box<Condition>) -> bool {
