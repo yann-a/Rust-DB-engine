@@ -171,8 +171,8 @@ fn read_select_project_rename(filename: String, condition: Box<Condition>, old_a
 
     let (swaps, mut final_columns) = swaps_for_projection(&column_names, &old_attrs);
     let entries: Vec<Entry> = rdr.records().map(
-        |record| {
-            let mut record : Vec<_> = record.unwrap().into_iter()
+        |record|
+            record.unwrap().into_iter()
             .map(
                 |value| {
                     match value.parse::<i64>() {
@@ -181,18 +181,18 @@ fn read_select_project_rename(filename: String, condition: Box<Condition>, old_a
                     }
                 }
             )
-            .collect();
-
-            for (i, j) in &swaps {
-                record.swap(*i, *j);
-            }
-            record.truncate(old_attrs.len());
-
-            record
-        }
+            .collect()
     )
     // chaining map, then filter is optimized by rust
-    .filter(|entry| eval_condition(entry, &column_names, &condition)) 
+    .filter(|entry| eval_condition(entry, &column_names, &condition))
+    .map(|mut record| {
+        for (i, j) in &swaps {
+            record.swap(*i, *j);
+        }
+        record.truncate(old_attrs.len());
+
+        record
+    })
     .collect();
 
     rename_columns(&mut final_columns, old_attrs, new_attrs);

@@ -221,6 +221,7 @@ fn apply_projections_early(expression: Box<Expression>, fields: Option<HashSet<S
             // DetectLoadColumnsOptimizer must be executed before
             let project_on = columns.as_ref().unwrap().into_iter().filter(|column| fields_set.contains(*column)).cloned().collect::<Vec<_>>();
 
+            // On ajoute une projection que si cela limite réellement les champs dispo
             if project_on.len() != columns.as_ref().unwrap().len() {
                 Box::new(Expression::Project(expression, project_on))
             } else {
@@ -242,7 +243,7 @@ impl Optimizer for ApplyProjectionsEarlyOptimizer {
 }
 
 /**
- * Try to push down selections.
+ * Try to push down selections and merge selections.
  */
 fn push_down_selections(mut expression: Box<Expression>, mut selections: Vec<(Box<Condition>, HashSet<String>)>) -> Box<Expression> {
     match *expression {
@@ -311,5 +312,86 @@ pub struct PushDownSelectionsOptimizer { }
 impl Optimizer for PushDownSelectionsOptimizer {
     fn optimize(&self, expression: Box<Expression>) -> Box<Expression> {
         push_down_selections(expression, Vec::new())
+    }
+}
+
+/**
+ * To simplify we make a few assumptions, on the order of optimizations
+ * before this one is executed:
+ * 
+ * - First, selections are pushed down.
+ * - Then, projections are pushed down.
+ * 
+ * This ensures that when recursively unfolding expressions, we will first see renaming, then projection, then selection, then another projection, then load.
+ */
+pub struct FoldComplexExpressionsOptimizer { }
+impl Optimizer for FoldComplexExpressionsOptimizer {
+    fn optimize(&self, mut expression: Box<Expression>) -> Box<Expression> {
+
+        let mut project_on = None;
+        let mut rename = None;
+        let mut selection = None;
+
+        let mut cont = true;
+        while cont {
+            match *expression {
+                Expression::Select(expr, condition) if selection.is_none() => {
+                    selection = Some(condition);
+                    expression = expr;
+                },
+                Expression::Project(expr, attrs) => {
+                    if project_on.is_none() {
+                        project_on = Some(attrs);
+                    }
+                    expression = expr;
+                },
+                Expression::Rename(expr, old_attrs, new_attrs) if project_on.is_none() && selection.is_none() => {
+                    rename = Some((old_attrs, new_attrs));
+                    expression = expr;
+                },
+                _ => cont = false
+            }
+        }
+
+        // on fold que si on a trouvé une sélection
+        match *expression {
+            Expression::Load(filename, fields) => {
+                let mut fields = fields.unwrap();
+                let condition = selection.unwrap();
+
+                if let Some(project_on_fields) = project_on {
+                    fields = project_on_fields.into_iter().collect::<HashSet<_>>();
+                }
+
+                let (mut old_attrs, mut new_attrs) = rename.unwrap_or((Vec::new(), Vec::new()));
+                for attr in &old_attrs {
+                    fields.remove(attr);
+                }
+                for still_there in fields {
+                    old_attrs.push(still_there.clone());
+                    new_attrs.push(still_there);
+                }
+
+                Box::new(Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs))
+            },
+            // TODO: add JoinProjectRename support
+            // Expression::Product(...) =>
+            _ => { // Sinon, on abort et on visite les enfants
+                expression = visit_children(self, expression);
+
+                if !selection.is_none() {
+                    expression = Box::new(Expression::Select(expression, selection.unwrap()));
+                }
+                if !project_on.is_none() {
+                    expression = Box::new(Expression::Project(expression, project_on.unwrap()));
+                }
+                if !rename.is_none() {
+                    let (old, new) = rename.unwrap();
+                    expression = Box::new(Expression::Rename(expression, old, new));
+                }
+
+                expression
+            }
+        }
     }
 }

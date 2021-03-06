@@ -78,7 +78,13 @@ impl PartialEq for Expression {
             (Expression::Except(e11, e12), Expression::Except(e21, e22)) |
                 (Expression::Union(e11, e12), Expression::Union(e21, e22)) |
                 (Expression::Product(e11, e12), Expression::Product(e21, e22)) => *e11==*e21 && *e12 == *e22,
-            (Expression::ReadSelectProjectRename(f1, c1, old1, new1), Expression::ReadSelectProjectRename(f2, c2, old2, new2)) => f1==f2 && *c1 == *c2 && old1==old2 && new1==new2,
+            (Expression::ReadSelectProjectRename(f1, c1, old1, new1), Expression::ReadSelectProjectRename(f2, c2, old2, new2)) => {
+                let mut rename1 = old1.into_iter().zip(new1.into_iter()).collect::<Vec<_>>();
+                let mut rename2 = old2.into_iter().zip(new2.into_iter()).collect::<Vec<_>>();
+                rename1.sort(); rename2.sort();
+
+                f1==f2 && *c1 == *c2 && rename1==rename2
+            },
             (Expression::Load(f1, _), Expression::Load(f2, _)) => f1 == f2,
             (_, _) => false
         }

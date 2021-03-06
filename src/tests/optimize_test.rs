@@ -103,7 +103,6 @@ fn test_push_down_selections() {
     assert_eq!(*expression, expected);
 }
 
-
 #[test]
 fn test_push_down_selections_with_products() {
     let expression = Box::new(get_expression_from_str(
@@ -154,6 +153,44 @@ fn test_push_down_selections_with_products() {
                 }
             }
         }}
+        "#
+    );
+
+    assert_eq!(*expression, expected);
+}
+
+#[test]
+fn test_read_select_project_rename_fold() {
+    let expression = Box::new(get_expression_from_str(
+        r#"
+        {"operation": "selection", "args": {
+            "condition": {"comparator": "=", "attribute1": "idp", "attribute2": "idp"},
+            "object": {
+                "operation": "load",
+                "args": { "filename": "project_spec/samples/projets.csv"}
+            }
+        }}
+        "#
+    ));
+
+    // optimize this expression
+    let optimizer = ChainOptimizer{optimizers: vec![
+        Box::new(DetectLoadColumnsOptimizer{}),
+        Box::new(FoldComplexExpressionsOptimizer{}),
+    ]};
+    let expression = optimizer.optimize(expression);
+
+    let expected = get_expression_from_str(
+        r#"
+        {
+            "operation": "rspr",
+            "args": {
+                "filename": "project_spec/samples/projets.csv",
+                "condition": {"comparator": "=", "attribute1": "idp", "attribute2": "idp"},
+                "old attributes": ["titre", "idp", "responsable"],
+                "new attributes": ["titre", "idp", "responsable"]
+            }
+        }
         "#
     );
 
