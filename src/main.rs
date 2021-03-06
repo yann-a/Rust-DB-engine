@@ -3,6 +3,7 @@ mod eval;
 mod output;
 mod optimize;
 mod parser;
+mod benchmark;
 
 #[cfg(test)]
 mod tests {
@@ -14,6 +15,7 @@ use crate::eval::*;
 use crate::output::*;
 use crate::optimize::*;
 use crate::parser::*;
+use crate::benchmark::*;
 
 use std::env;
 
@@ -41,4 +43,7 @@ fn main() {
         Some(filename) => write_table(table, filename),
         None => print_table(table)
     }
+
+    // Probably need to find a better way to target it in the near future
+    run_benchmark(String::from("tests/benchmarks/bench01.json"));
 }

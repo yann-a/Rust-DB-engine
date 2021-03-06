@@ -52,7 +52,7 @@ impl PartialEq for Condition {
 }
 impl Eq for Condition {}
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(from = "ExpressionParse", into = "ExpressionParse")] 
 pub enum Expression {
     Select(Box<Expression>, Box<Condition>),
