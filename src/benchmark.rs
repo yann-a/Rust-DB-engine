@@ -32,6 +32,7 @@ fn opti_from_string(opti: String) -> Box<dyn Optimizer> {
         "DLC" => Box::new(DetectLoadColumnsOptimizer{}),
         "PDS" => Box::new(PushDownSelectionsOptimizer{}),
         "APE" => Box::new(ApplyProjectionsEarlyOptimizer{}),
+        "FCE" => Box::new(FoldComplexExpressionsOptimizer{}),
         _ => panic!(format!("unknown optimization: {}", opti))
     }
 }

@@ -36,6 +36,10 @@ Use `cargo run` to (build and) run the project.
 
 Note that you can only specify an output file if you provided an input one.
 
+#### Tests and Benchmarking
+
+Alternatively, use `cargo build -- --benchmark` to run the benchmarking script
+
 ### Input format
 
 The program takes JSON-formatted inputs, according to the following grammar
