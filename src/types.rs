@@ -62,6 +62,7 @@ pub enum Expression {
     Union(Box<Expression>, Box<Expression>),
     Product(Box<Expression>, Box<Expression>),
     ReadSelectProjectRename(String, Box<Condition>, Vec<String>, Vec<String>),
+    JoinProjectRename(Box<Expression>, Box<Expression>, Box<Condition>, Vec<String>, Vec<String>),
     Load(String, Option<HashSet<String>>) // Optionally contains the columns to be loaded for future optimizations
 }
 
