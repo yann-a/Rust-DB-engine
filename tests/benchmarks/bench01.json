@@ -20,12 +20,12 @@
     },
     "tests": [
         {
-            "nom": "Part 1 (No optim)    ",
-            "optis": []
+            "name": "Part 1 (No optim)    ",
+            "optims": []
         },
         {
-            "nom": "Part 2 (Simple optim)",
-            "optis": [
+            "name": "Part 2 (Simple optim)",
+            "optims": [
                 "DLC",
                 "PDS",
                 "APE",

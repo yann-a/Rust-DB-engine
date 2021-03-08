@@ -36,7 +36,7 @@ Use `cargo run` to (build and) run the project.
 
 Note that you can only specify an output file if you provided an input one.
 
-#### Tests and Benchmarking
+#### Benchmarking
 
 Alternatively, use `cargo build -- --benchmark` to run the benchmarking script
 
@@ -67,3 +67,28 @@ FILENAME ::= ... // matches \"[A-Za-z\-_0-9]+\.csv\"
 
 ### Parsing JSON inputs
 This is done using the `serde` crate, along with its JSON parser `serde_json`. Basically, we anotate our type definitions using serde directives in order to specify the bindings between our Rust types and the JSON grammar. Serde then automatically reads the json we feed him and converts it in order to fit the type into which we wish to transform the data.
+
+### Benchmarking
+The benchmark can be run using `cargo run -- -b` or `cargo run -- --benchmark`. It runs all benchmarks in the `tests/benchmarks` folder.
+
+A benchmark is specified in JSON format, with the following format :
+```
+{
+      "input": { input, formatted as per a regular execution },
+      "tests": [
+            {
+                  "name": // a string to name this variant,
+                  "optims": [
+                        // A list of optimizations to apply
+                  ]
+            },
+            ...
+      ]
+}
+```
+
+Optimizations are to be chosen in the following list :
+* **DLC** : 
+* **PDS** : 
+* **APE** : 
+* **FCE** :
