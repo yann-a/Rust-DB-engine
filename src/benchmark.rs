@@ -37,11 +37,13 @@ fn opti_from_string(opti: String) -> Box<dyn Optimizer> {
     }
 }
 
-fn run_benchmark_on(path: String) {
+fn run_benchmark_on(path: String, n: Option<u128>) {
     let benchmark = get_benchmark_from(path.clone());
 
     let expression = Box::new(benchmark.input);
     let tests = benchmark.tests;
+
+    let nb_it = n.unwrap_or(100);
 
     println!("### Running benchmark {} ###\n", path);
 
@@ -51,11 +53,17 @@ fn run_benchmark_on(path: String) {
 
         let expr = optimizer.optimize(expression.clone());
 
-        let time_before = Instant::now();
-        eval(expr);
-        let time_elapsed = time_before.elapsed();
+        let mut total_time = std::time::Duration::new(0, 0);
+
+        for _ in 0..nb_it {
+            let time_before = Instant::now();
+            eval(expr.clone());
+            let time_elapsed = time_before.elapsed();
+
+            total_time += time_elapsed;
+        }
         
-        println!("{} took {:.2?}", test.nom, time_elapsed);
+        println!("{} took {:.2?} on average", test.nom, total_time/(nb_it as u32));
     }
 }
 
@@ -77,6 +85,6 @@ pub fn run_benchmark() {
 
     // Run benchmarking on each of them
     for entry in entries {
-        run_benchmark_on(entry);
+        run_benchmark_on(entry, Some(100));
     }
 }
