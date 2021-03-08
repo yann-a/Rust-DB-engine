@@ -19,10 +19,11 @@ On Unix-like systems, this can be done via `rustup`, by running `curl https://sh
 #### Dependencies
 
 The project relies on the following crates (the equivalent of libraries in Rust) :
-* `csv`
-* `serde`
-* `serde_derive`
-* `serde_json`
+* `csv` to manage csv files
+* `serde` to parse inputs
+* `serde_derive` a addon of serde to automatically derive a grammar from a type
+* `serde_json` a addon of serde to support JSON
+* `clap` to handle command-line arguments
 
 Singe Cargo manages them automatically, they do not require any kind of manual installation.
 
