@@ -355,7 +355,7 @@ impl Optimizer for FoldComplexExpressionsOptimizer {
 
         // on fold que si on a trouvé une sélection
         match *expression {
-            Expression::Load(filename, fields) => {
+            Expression::Load(filename, fields) if selection.is_some() => {
                 let mut fields = fields.unwrap();
                 let condition = selection.unwrap();
 
