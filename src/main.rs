@@ -38,10 +38,9 @@ fn main() {
         .get_matches();
 
     if args.is_present("test") {
-        // Run tests here
+        // Run tests here (or not ?)
     } else if args.is_present("benchmark") {
-        // Probably need to find a better way to target it in the near future
-        run_benchmark(String::from("tests/benchmarks/bench01.json"));
+        run_benchmark();
     } else {
         let source_file = args.value_of("source_file").map(|str| String::from(str));
         let output_file = args.value_of("output_file").map(|str| String::from(str));

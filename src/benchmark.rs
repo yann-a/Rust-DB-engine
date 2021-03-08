@@ -3,9 +3,9 @@ use crate::optimize::*;
 use crate::eval::*;
 
 use std::fs::File;
+use std::fs;
 use serde_derive::Deserialize;
 use std::io::BufReader;
-
 use std::time::Instant;
 
 
@@ -37,7 +37,7 @@ fn opti_from_string(opti: String) -> Box<dyn Optimizer> {
     }
 }
 
-pub fn run_benchmark(path: String) {
+fn run_benchmark_on(path: String) {
     let benchmark = get_benchmark_from(path.clone());
 
     let expression = Box::new(benchmark.input);
@@ -56,5 +56,27 @@ pub fn run_benchmark(path: String) {
         let time_elapsed = time_before.elapsed();
         
         println!("{} took {:.2?}", test.nom, time_elapsed);
+    }
+}
+
+pub fn run_benchmark() {
+    // Get a vector of all filenaames inside "tests/benchmarks"
+    let mut entries : Vec<_> = fs::read_dir("tests/benchmarks").
+        unwrap()
+        .map(|res| {
+            res.map(|e| e.path())
+            .unwrap()
+            .to_str()
+            .map(|p| String::from(p))
+            .unwrap()
+        })
+        .collect();
+
+    // Sort them
+    entries.sort();
+
+    // Run benchmarking on each of them
+    for entry in entries {
+        run_benchmark_on(entry);
     }
 }
