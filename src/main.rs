@@ -17,33 +17,50 @@ use crate::optimize::*;
 use crate::parser::*;
 use crate::benchmark::*;
 
-use std::env;
+use clap::{Arg, App};
 
 fn main() {
-    // Read command-line arguments
-    let args: Vec<String> = env::args().collect();
+    // Parse command-line arguments and options
+    let args = App::new("Linear Algebra Engine on CSV files")
+        .version("1.0")
+        .author("Guilhem Niot <guilhem.niot@ens-lyon.fr>; Yann Aguettaz <yann.aguettaz@ens-lyon.fr>")
+        .about("Takes JSON-formatted querries and runs them on CSV tables")
+        .arg(Arg::new("source_file")
+            .index(1))
+        .arg(Arg::new("output_file")
+            .index(2))
+        .arg(Arg::new("test")
+            .short('t')
+            .long("tests"))
+        .arg(Arg::new("benchmark")
+            .short('b')
+            .long("benchmark"))
+        .get_matches();
 
-    let source_file = if args.len() > 1 { Some(String::from(&args[1])) } else { None };
-    let output_file = if args.len() > 2 { Some(String::from(&args[2])) } else { None };
+    if args.is_present("test") {
+        // Run tests here (or not ?)
+    } else if args.is_present("benchmark") {
+        run_benchmark();
+    } else {
+        let source_file = args.value_of("source_file").map(|str| String::from(str));
+        let output_file = args.value_of("output_file").map(|str| String::from(str));
 
-    // Get expression from json
-    let expr = Box::new(get_expression_from(source_file));
+        // Get expression from json
+        let expr = Box::new(get_expression_from(source_file));
 
-    // Optimization phase
-    let optimizer = ChainOptimizer{optimizers: vec![
-        Box::new(DetectLoadColumnsOptimizer{}),
-        Box::new(PushDownSelectionsOptimizer{}),
-        Box::new(ApplyProjectionsEarlyOptimizer{}),
-    ]};
-    let expr = optimizer.optimize(expr);
+        // Optimization phase
+        let optimizer = ChainOptimizer{optimizers: vec![
+            Box::new(DetectLoadColumnsOptimizer{}),
+            Box::new(PushDownSelectionsOptimizer{}),
+            Box::new(ApplyProjectionsEarlyOptimizer{}),
+        ]};
+        let expr = optimizer.optimize(expr);
 
-    // Eval and print/write result
-    let table = eval(expr);
-    match output_file {
-        Some(filename) => write_table(table, filename),
-        None => print_table(table)
+        // Eval and print/write result
+        let table = eval(expr);
+        match output_file {
+            Some(filename) => write_table(table, filename),
+            None => print_table(table)
+        }
     }
-
-    // Probably need to find a better way to target it in the near future
-    run_benchmark(String::from("tests/benchmarks/bench01.json"));
 }

@@ -3,9 +3,9 @@ use crate::optimize::*;
 use crate::eval::*;
 
 use std::fs::File;
+use std::fs;
 use serde_derive::Deserialize;
 use std::io::BufReader;
-
 use std::time::Instant;
 
 
@@ -32,15 +32,18 @@ fn opti_from_string(opti: String) -> Box<dyn Optimizer> {
         "DLC" => Box::new(DetectLoadColumnsOptimizer{}),
         "PDS" => Box::new(PushDownSelectionsOptimizer{}),
         "APE" => Box::new(ApplyProjectionsEarlyOptimizer{}),
+        "FCE" => Box::new(FoldComplexExpressionsOptimizer{}),
         _ => panic!(format!("unknown optimization: {}", opti))
     }
 }
 
-pub fn run_benchmark(path: String) {
+fn run_benchmark_on(path: String, n: Option<u128>) {
     let benchmark = get_benchmark_from(path.clone());
 
     let expression = Box::new(benchmark.input);
     let tests = benchmark.tests;
+
+    let nb_it = n.unwrap_or(100);
 
     println!("### Running benchmark {} ###\n", path);
 
@@ -50,10 +53,38 @@ pub fn run_benchmark(path: String) {
 
         let expr = optimizer.optimize(expression.clone());
 
-        let time_before = Instant::now();
-        eval(expr);
-        let time_elapsed = time_before.elapsed();
+        let mut total_time = std::time::Duration::new(0, 0);
+
+        for _ in 0..nb_it {
+            let time_before = Instant::now();
+            eval(expr.clone());
+            let time_elapsed = time_before.elapsed();
+
+            total_time += time_elapsed;
+        }
         
-        println!("{} took {:.2?}", test.nom, time_elapsed);
+        println!("{} took {:.2?} on average", test.nom, total_time/(nb_it as u32));
+    }
+}
+
+pub fn run_benchmark() {
+    // Get a vector of all filenaames inside "tests/benchmarks"
+    let mut entries : Vec<_> = fs::read_dir("tests/benchmarks").
+        unwrap()
+        .map(|res| {
+            res.map(|e| e.path())
+            .unwrap()
+            .to_str()
+            .map(|p| String::from(p))
+            .unwrap()
+        })
+        .collect();
+
+    // Sort them
+    entries.sort();
+
+    // Run benchmarking on each of them
+    for entry in entries {
+        run_benchmark_on(entry, Some(100));
     }
 }
