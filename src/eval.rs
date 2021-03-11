@@ -1,6 +1,6 @@
 use crate::types::*;
 use csv::Reader;
-use std::collections::HashMap;
+use std::collections::{HashMap,HashSet};
 
 
 pub fn eval(expression: Box<Expression>) -> Table {
@@ -204,8 +204,97 @@ fn read_select_project_rename(filename: String, condition: Box<Condition>, old_a
 }
 
 fn join_project_rename(expr1: Box<Expression>, expr2: Box<Expression>, condition: Box<Condition>, old_attrs: Vec<String>, new_attrs: Vec<String>) -> Table {
-    let (column_names1, mut entries1) = eval(expr1);
-    let (column_names2, mut entries2) = eval(expr2);
+    let (column_names1, entries1) = eval(expr1);
+    let (column_names2, entries2) = eval(expr2);
+
+    // On se repose sur un hash join pour accélérer les cross product
+    let mut unsupported_conditions = Vec::new();
+    let mut conditions_to_treat = vec![condition];
+    let mut bucket1 = HashSet::new();
+
+    while let Some(condition) = conditions_to_treat.pop() {
+        match *condition {
+            Condition::Equal(Value::Column(f1), Value::Column(f2))
+                if (column_names1.contains_key(&f1) && column_names2.contains_key(&f2)) || (column_names2.contains_key(&f1) && column_names1.contains_key(&f2)) => 
+            {
+                if column_names1.contains_key(&f1) {
+                    bucket1.insert((f1, f2));
+                } else {
+                    bucket1.insert((f2, f1));
+                }
+            },
+            Condition::And(c1, c2) => {
+                conditions_to_treat.push(c1);
+                conditions_to_treat.push(c2);
+            },
+            _ => unsupported_conditions.push(condition)
+        }
+    }
+
+    let indexes = bucket1.into_iter().map(|(field1, field2)|
+        (column_names1.get(&field1).unwrap(), column_names2.get(&field2).unwrap())
+    ).collect::<Vec<_>>();
+
+    let mut buckets = HashMap::new();
+
+    for entry1 in entries1 {
+        let mut repr = Vec::new();
+        for (id, _) in &indexes {
+            repr.push(entry1[**id].clone());
+        }
+
+        let mut bucket = buckets.get_mut(&repr);
+        if bucket.is_none() {
+            buckets.insert(repr.clone(), Vec::new());
+            bucket = buckets.get_mut(&repr);
+        }
+        let bucket = bucket.unwrap();
+        
+        bucket.push(entry1);
+    }
+
+    let mut final_entries: Vec<Entry> = Vec::new();
+
+    for entry2 in &entries2 {
+        let mut repr = Vec::new();
+        for (_, id) in &indexes {
+            repr.push(entry2[**id].clone());
+        }
+
+        // On fait le produit avec les éléments du bucket qui correspond
+        let bucket = buckets.get(&repr);
+        if let Some(entries) = bucket {
+            for entry in entries {
+                let mut entry = entry.clone();
+                entry.append(&mut entry2.clone());
+
+                final_entries.push(entry);
+            }
+        }
+    }
+
+    let mut final_columns = HashMap::new();
+    for (key, value) in column_names2 {
+        final_columns.insert(key, column_names1.len()+value);
+    }
+    for (key, value) in column_names1 {
+        final_columns.insert(key, value);
+    }
+
+    let (swaps, mut final_columns) = swaps_for_projection(&final_columns, &old_attrs);
+    let final_entries = final_entries.into_iter().map(|mut record| {
+        for (i, j) in &swaps {
+            record.swap(*i, *j);
+        }
+        record.truncate(old_attrs.len());
+
+        record
+    })
+    .collect();
+
+    rename_columns(&mut final_columns, old_attrs, new_attrs);
+
+    (final_columns, final_entries)
 }
 
 fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, condition: &Box<Condition>) -> bool {
