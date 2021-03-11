@@ -28,12 +28,14 @@ Singe Cargo manages them automatically, they do not require any kind of manual i
 
 ## Usage
 
-Use the following command to run the program :
+Use the following command to run (and automatically build) the program :
 
 `cargo run [input file] [output file]`
 
 If no input file is specified, it will read from the standard input instead.  
 If no output file is specified, it will output in the standard output instead.
+
+*NB :* `cargo build` can be used to compile, but not run the program
 
 ### Other commands
 

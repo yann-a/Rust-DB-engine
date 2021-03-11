@@ -1,6 +1,23 @@
-#### Benchmarking
+# DBDM Project
 
-Alternatively, use `cargo build -- --benchmark` to run the benchmarking script
+This file serves as both a documentation and a report of our project
+
+**Authors**:
+* Guilhem Niot
+* Yann Aguettaz
+
+## Specifications
+
+### Usage
+
+Use the following command to run (and automatically build) the program :
+
+`cargo run [input file] [output file]`
+
+If no input file is specified, it will read from the standard input instead.  
+If no output file is specified, it will output in the standard output instead.
+
+*NB :* `cargo build` can be used to compile, but not run the program
 
 ### Input format
 
@@ -25,18 +42,30 @@ ATTS ::= STRING list
 FILENAME ::= ... // matches \"[A-Za-z\-_0-9]+\.csv\"
 ```
 
-## On our implementation
+Examples can be found in the `expr_samples` folder
 
-### Parsing JSON inputs
-This is done using the `serde` crate, along with its JSON parser `serde_json`. Basically, we anotate our type definitions using serde directives in order to specify the bindings between our Rust types and the JSON grammar. Serde then automatically reads the json we feed him and converts it in order to fit the type into which we wish to transform the data.
+### Tables
 
-### Benchmarking
-The benchmark can be run using `cargo run -- -b` or `cargo run -- --benchmark`. It runs all benchmarks in the `tests/benchmarks` folder.
+Tables are represented by CSV files, the first one holding the column names, and each subsequent line containing as many values as there are columns.
 
-A benchmark is specified in JSON format, with the following format :
+### Tests
+
+Some tests to demonstrate the correctness of the optimizations are implemented.
+
+They can be run through `cargo tests`.  
+They compare the outputs of the execution of some expression and of its optimized version, to check whether we obtain the same table (which should be the case).
+
+### Benchmarks
+
+If tests are there to demonstrate the correctness of the optimizations, benchmarks are there to assess the performance gain.
+
+Benchmarks can be run through `cargo run -- -b`, or `cargo run -- --benchmark`.  
+This command processes each benchmark in the `expr_samples/benchmarks` folder, and displays the average execution time over 50 tries.
+
+This means one can easily add requests to the benchmarking by adding a JSON file to the `expr_samples/benchmarks` folder, which should follow the following syntax :
 ```
 {
-      "input": { input, formatted as per a regular execution },
+      "input": { input, formatted according to the main syntax (see above) },
       "tests": [
             {
                   "name": // a string to name this variant,
@@ -49,8 +78,16 @@ A benchmark is specified in JSON format, with the following format :
 }
 ```
 
-Optimizations are to be chosen in the following list :
-* **DLC** : 
-* **PDS** : 
-* **APE** : 
-* **FCE** :
+The idea is that, for each input, we attach a series of tests, to see whether one test performs better than the others.  
+A test is composed of a name, used to distinguish it from others; and of a list of optomizations to use.
+
+Each optimization should be one of the following :
+* `DLC` : *Detect Load Columns*. Detects the columns that are actually used. Should always be used before *PDS*, as the latter relies on this column detection.
+* `PDS` : *Push Down Selection*. Try to push down selections as long as possible.
+* `APE` : *Apply Projections Early*. Tries to project as early as possible.
+* `FCE` : *Fold Complex Expressions*. Tries to replace parts of the expression by `rspr` or `jpr` constructions.
+
+## On our implementation
+
+### Parsing JSON inputs
+This is done using the `serde` crate, along with its JSON parser `serde_json`. Basically, we anotate our type definitions using serde directives in order to specify the bindings between our Rust types and the JSON grammar. Serde then automatically reads the json we feed him and converts it in order to fit the type into which we wish to transform the data.
