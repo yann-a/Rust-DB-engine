@@ -68,8 +68,8 @@ fn run_benchmark_on(path: String, n: Option<u128>) {
 }
 
 pub fn run_benchmark() {
-    // Get a vector of all filenaames inside "tests/benchmarks"
-    let mut entries : Vec<_> = fs::read_dir("tests/benchmarks").
+    // Get a vector of all filenaames inside "expr_samples/benchmarks"
+    let mut entries : Vec<_> = fs::read_dir("expr_samples/benchmarks").
         unwrap()
         .map(|res| {
             res.map(|e| e.path())
