@@ -95,6 +95,7 @@ fn get_exposed_columns(expression: &Box<Expression>) -> HashSet<String> {
 
 fn columns_used_in_condition(condition: &Box<Condition>, fields: &mut HashSet<String>) {
     match condition.as_ref() {
+        Condition::True | Condition::False => (),
         Condition::Not(c) => columns_used_in_condition(c, fields),
         Condition::And(c1, c2) | Condition::Or(c1, c2) => {
             columns_used_in_condition(c1, fields);
@@ -128,9 +129,11 @@ fn rename_value(value: Value, rename_map: &HashMap<String, String>) -> Value {
 
 fn rename_in_condition(condition: Box<Condition>, rename_map: &HashMap<String, String>) -> Box<Condition> {
     match *condition {
+        Condition::True => Box::new(Condition::True),
+        Condition::False => Box::new(Condition::False),
         Condition::Not(c) => Box::new(Condition::Not(rename_in_condition(c, rename_map))),
         Condition::And(c1, c2) => Box::new(Condition::And(rename_in_condition(c1, rename_map), rename_in_condition(c2, rename_map))),
-        Condition::Or(c1, c2) => Box::new(Condition::And(rename_in_condition(c1, rename_map), rename_in_condition(c2, rename_map))),
+        Condition::Or(c1, c2) => Box::new(Condition::Or(rename_in_condition(c1, rename_map), rename_in_condition(c2, rename_map))),
         Condition::Equal(v1, v2) => Box::new(Condition::Equal(rename_value(v1, rename_map), rename_value(v2, rename_map))),
         Condition::Less(v1, v2) => Box::new(Condition::Less(rename_value(v1, rename_map), rename_value(v2, rename_map))),
         Condition::More(v1, v2) => Box::new(Condition::More(rename_value(v1, rename_map), rename_value(v2, rename_map))),
