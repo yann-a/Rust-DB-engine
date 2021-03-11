@@ -351,7 +351,7 @@ impl Optimizer for UnfoldComplexExpressionsOptimizer {
                     new_attrs
                 ))
             },
-            _ => expression
+            _ => visit_children(self, expression)
         }
     }
 }
