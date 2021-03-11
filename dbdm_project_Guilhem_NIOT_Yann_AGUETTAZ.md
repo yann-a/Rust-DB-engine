@@ -42,7 +42,8 @@ ATTS ::= STRING list
 FILENAME ::= ... // matches \"[A-Za-z\-_0-9]+\.csv\"
 ```
 
-Examples can be found in the `expr_samples` folder
+Examples can be found in the `expr_samples` folder  
+*NB: File paths are relative to the root, i.e the location of `Cargo.toml`*
 
 ### Tables
 
@@ -99,6 +100,8 @@ Our program is scattered across 6 modules that handle a separate part of the com
 * **Output** holds the script to write outputs to files or the standard output
 * **Benchmark** fetches benchmarks from the designated folder and runs them
 
+Furthermore, correction tests are implemented in an other *crate*, called `tests`. They used a built-in feature of cargo.
+
 ### Parsing JSON inputs
 
 This is done using the `serde` crate, along with its JSON parser `serde_json`. Basically, we anotate our type definitions using serde directives in order to specify the bindings between our Rust types and the JSON grammar. Serde then automatically reads the json we feed him and converts it in such a way to fit the type into which we wish to transform the data.
@@ -126,4 +129,5 @@ Four optimizations are implemented :
 ## Benchmarks
 *NB: These benchmarks can be tested using `cargo run -- -b` (note that the precise numerical values may vary depending on the machine).*  
 *Other benchmarks can be requested using the syntax defined in the above afferent section.*
+
 
