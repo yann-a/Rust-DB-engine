@@ -145,4 +145,4 @@ Str("Ursa")
 The benchmarks can be run using `cargo run -- -b` (note that the precise numerical values may vary depending on the machine).
 Other benchmarks can be requested using the syntax defined in the above afferent section.
 
-On small examples, it seems that these aren't really efficient, especially with the addes cost of optimizing the expression, but the framework would allow us to text if easily had we access to great-scale expressions.
+On small examples, it seems that these aren't really efficient, especially with the added cost of optimizing the expression, but the framework would allow us to easily test them extensively, had we access to great-scale expressions, which are a bit cumbersome to write.
