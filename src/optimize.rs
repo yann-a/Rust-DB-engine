@@ -88,7 +88,8 @@ fn get_exposed_columns(expression: &Box<Expression>) -> HashSet<String> {
             fields
         },
         Expression::Load(_, columns) => columns.as_ref().unwrap().iter().cloned().collect(),
-        _ => panic!("Unsupported expression, please run UnfoldComplexExpression")
+        Expression::ReadSelectProjectRename(_, _, _, columns) => columns.into_iter().cloned().collect(),
+        Expression::JoinProjectRename(_, _, _, _, columns) => columns.into_iter().cloned().collect(),
     }
 }
 
@@ -315,6 +316,42 @@ impl Optimizer for PushDownSelectionsOptimizer {
     }
 }
 
+pub struct UnfoldComplexExpressionsOptimizer { }
+impl Optimizer for UnfoldComplexExpressionsOptimizer {
+    fn optimize(&self, expression: Box<Expression>) -> Box<Expression> {
+
+        match *expression {
+            Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs) => {
+                Box::new(Expression::Rename(
+                    Box::new(Expression::Project(
+                        Box::new(Expression::Select(
+                            Box::new(Expression::Load(filename, None)),
+                            condition
+                        )),
+                        old_attrs.iter().cloned().collect()
+                    )),
+                    old_attrs,
+                    new_attrs
+                ))
+            },
+            Expression::JoinProjectRename(expr1, expr2, condition, old_attrs, new_attrs) => {
+                Box::new(Expression::Rename(
+                    Box::new(Expression::Project(
+                        Box::new(Expression::Select(
+                            Box::new(Expression::Product(expr1, expr2)),
+                            condition
+                        )),
+                        old_attrs.iter().cloned().collect()
+                    )),
+                    old_attrs,
+                    new_attrs
+                ))
+            },
+            _ => expression
+        }
+    }
+}
+
 /**
  * To simplify we make a few assumptions, on the order of optimizations
  * before this one is executed:
@@ -374,8 +411,33 @@ impl Optimizer for FoldComplexExpressionsOptimizer {
 
                 Box::new(Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs))
             },
-            // TODO: add JoinProjectRename support
-            // Expression::Product(...) =>
+            Expression::Product(expr1, expr2) if selection.is_some() => {
+                let expr1 = self.optimize(expr1);
+                let expr2 = self.optimize(expr2);
+                
+                let mut fields = if let Some(project_on_fields) = project_on {
+                    project_on_fields.into_iter().collect::<HashSet<_>>()
+                } else {
+                    let mut fields1 = get_exposed_columns(&expr1);
+                    let fields2 = get_exposed_columns(&expr2);
+
+                    fields1.extend(fields2);
+                    fields1
+                };
+
+                let condition = selection.unwrap();
+
+                let (mut old_attrs, mut new_attrs) = rename.unwrap_or((Vec::new(), Vec::new()));
+                for attr in &old_attrs {
+                    fields.remove(attr);
+                }
+                for still_there in fields {
+                    old_attrs.push(still_there.clone());
+                    new_attrs.push(still_there);
+                }
+
+                Box::new(Expression::JoinProjectRename(expr1, expr2, condition, old_attrs, new_attrs))
+            },
             _ => { // Sinon, on abort et on visite les enfants
                 expression = visit_children(self, expression);
 
