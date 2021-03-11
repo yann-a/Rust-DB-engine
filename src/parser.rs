@@ -34,6 +34,7 @@ pub enum ExpressionParse {
     Read {filename: String},
     #[serde(rename = "rspr")]
     ReadSelectProjectRename {filename: String, condition: Box<ConditionParse>, #[serde(rename = "old attributes")] old_attributes: Vec<String>, #[serde(rename = "new attributes")] new_attributes: Vec<String>},
+    #[serde(rename = "jpr")]
     JoinProjectRename {object1: Box<ExpressionParse>, object2: Box<ExpressionParse>, condition: Box<ConditionParse>, #[serde(rename = "old attributes")] old_attributes: Vec<String>, #[serde(rename = "new attributes")] new_attributes: Vec<String>}
 }
 

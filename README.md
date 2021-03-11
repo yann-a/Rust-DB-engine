@@ -30,7 +30,7 @@ Singe Cargo manages them automatically, they do not require any kind of manual i
 
 Use the following command to run (and automatically build) the program :
 
-`cargo run [input file] [output file]`
+`cargo run -- [input file] [output file]`
 
 If no input file is specified, it will read from the standard input instead.  
 If no output file is specified, it will output in the standard output instead.
