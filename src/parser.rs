@@ -8,6 +8,8 @@ use std::io::{self, Read};
 #[derive(Deserialize)]
 #[serde(untagged)]
 pub enum ConditionParse {
+    True,
+    False,
     Log1 {logical: String, condition: Box<ConditionParse>},
     Log2 {logical: String, condition1: Box<ConditionParse>, condition2: Box<ConditionParse>},
     Comp {comparator: String, attribute1: String, attribute2: String}
@@ -38,6 +40,8 @@ pub enum ExpressionParse {
 impl From<ConditionParse> for Condition {
     fn from(condition: ConditionParse) -> Condition {
         match condition {
+            ConditionParse::True => Condition::True,
+            ConditionParse::False => Condition::False,
             ConditionParse::Log1 {logical: op, condition: c} =>
                 match &op[..] {
                    "not" => Condition::Not(Box::new(Condition::from(*c))),

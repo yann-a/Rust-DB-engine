@@ -49,6 +49,7 @@ fn main() {
             Box::new(DetectLoadColumnsOptimizer{}),
             Box::new(PushDownSelectionsOptimizer{}),
             Box::new(ApplyProjectionsEarlyOptimizer{}),
+            Box::new(FoldComplexExpressionsOptimizer{})
         ]};
         let expr = optimizer.optimize(expr);
 

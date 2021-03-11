@@ -5,7 +5,6 @@ use std::collections::{HashMap,HashSet};
 
 pub fn eval(expression: Box<Expression>) -> Table {
     match *expression {
-        //Expression::Table(table) => table,
         Expression::Select(expression_from, condition) => select(expression_from, condition),
         Expression::Project(expression_from, columns) => project(expression_from, columns),
         Expression::Product(expr1, expr2) => product(expr1, expr2),
@@ -14,8 +13,7 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Rename(expression, old_columns, new_columns) => renaming(expression, old_columns, new_columns),
         Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs) => read_select_project_rename(filename, condition, old_attrs, new_attrs),
         Expression::JoinProjectRename(expr1, expr2, condition, old_attrs, new_attrs) => join_project_rename(expr1, expr2, condition, old_attrs, new_attrs),
-        Expression::Load(filename, _) => read(filename),
-        // _ => (HashMap::new(), Vec::new())
+        Expression::Load(filename, _) => read(filename)
     }
 }
 
@@ -299,6 +297,9 @@ fn join_project_rename(expr1: Box<Expression>, expr2: Box<Expression>, condition
 
 fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, condition: &Box<Condition>) -> bool {
     match &**condition {
+        Condition::True => true,
+        Condition::False => false,
+        Condition::Not(c) => !eval_condition(entry, column_names, &c),
         Condition::And(c1, c2) => eval_condition(entry, column_names, &c1) && eval_condition(entry, column_names, &c2),
         Condition::Or(c1, c2) => eval_condition(entry, column_names, &c1) || eval_condition(entry, column_names, &c2),
         Condition::Equal(v1, v2) => 
@@ -316,8 +317,7 @@ fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, conditio
             match (get_value(entry, column_names, v1), get_value(entry, column_names, v2)) {
                 (Value::Int(i), Value::Int(j)) => i > j,
                 _ => false
-            },
-        _ => false
+            }
     }
 }
 

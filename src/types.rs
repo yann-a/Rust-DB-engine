@@ -29,6 +29,8 @@ pub type Table = (HashMap<String, usize>, Vec<Entry>);
 
 #[derive(Debug, Clone)]
 pub enum Condition {
+    True,
+    False,
     Not(Box<Condition>),
     Or(Box<Condition>, Box<Condition>),
     And(Box<Condition>, Box<Condition>),
@@ -40,6 +42,7 @@ pub enum Condition {
 impl PartialEq for Condition {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
+            (Condition::True, Condition::True) | (Condition::False, Condition::False) => true,
             (Condition::Not(c1), Condition::Not(c2)) => *c1==*c2,
             (Condition::Or(c11, c12), Condition::Or(c21, c22)) |
                 (Condition::And(c11, c12), Condition::And(c21, c22)) => *c11==*c21 && *c12 == *c22,
