@@ -135,6 +135,10 @@ For instance, running
 `cargo run -- expr_samples/test02.json` will return the name of the project which Bruno Shepherd is responsible of, i.e Ursa :
 
 ```
+$ cargo run -- expr_samples/test02.json
+
+titre 
+Str("Ursa")
 ```
 
 ## Benchmarks
@@ -142,5 +146,3 @@ The benchmarks can be run using `cargo run -- -b` (note that the precise numeric
 Other benchmarks can be requested using the syntax defined in the above afferent section.
 
 On small examples, it seems that these aren't really efficient, especially with the addes cost of optimizing the expression, but the framework would allow us to text if easily had we access to great-scale expressions.
-
-I
