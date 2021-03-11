@@ -29,17 +29,13 @@ fn main() {
             .index(1))
         .arg(Arg::new("output_file")
             .index(2))
-        .arg(Arg::new("test")
-            .short('t')
-            .long("tests"))
         .arg(Arg::new("benchmark")
             .short('b')
             .long("benchmark"))
         .get_matches();
 
-    if args.is_present("test") {
-        // Run tests here (or not ?)
-    } else if args.is_present("benchmark") {
+    // If benchmarkn, run it. Else parse input and evaluate
+    if args.is_present("benchmark") {
         run_benchmark();
     } else {
         let source_file = args.value_of("source_file").map(|str| String::from(str));
