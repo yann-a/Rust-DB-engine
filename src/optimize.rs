@@ -32,7 +32,7 @@ fn visit_children(optimizer: &dyn Optimizer, expression: Box<Expression>) -> Box
             Expression::Except(expr1, expr2) => Expression::Except(optimizer.optimize(expr1), optimizer.optimize(expr2)),
             Expression::Union(expr1, expr2) => Expression::Union(optimizer.optimize(expr1), optimizer.optimize(expr2)),
             Expression::Rename(expression, old_columns, new_columns) => Expression::Rename(optimizer.optimize(expression), old_columns, new_columns),
-            Expression::ReadSelectProjectRename(_, _, _, _) | Expression::Load(_, _) => *expression
+            _ => panic!("Unsupported expression, please run UnfoldComplexExpression")
         }
     )
 
@@ -87,8 +87,8 @@ fn get_exposed_columns(expression: &Box<Expression>) -> HashSet<String> {
 
             fields
         },
-        Expression::ReadSelectProjectRename(_, _, _, new_attributes) => new_attributes.iter().cloned().collect(),
-        Expression::Load(_, columns) => columns.as_ref().unwrap().iter().cloned().collect()
+        Expression::Load(_, columns) => columns.as_ref().unwrap().iter().cloned().collect(),
+        _ => panic!("Unsupported expression, please run UnfoldComplexExpression")
     }
 }
 
@@ -215,7 +215,6 @@ fn apply_projections_early(expression: Box<Expression>, fields: Option<HashSet<S
             Box::new(Expression::Rename(apply_projections_early(expression, Some(fields_set)), old_columns, new_columns))
         },
         Expression::Rename(expression, old_columns, new_columns) => Box::new(Expression::Rename(apply_projections_early(expression, fields), old_columns, new_columns)),
-        Expression::ReadSelectProjectRename(_, _, _, _) => (expression), // TODO: implement this
         Expression::Load(_, ref columns) if fields.is_some() => {
             let fields_set = fields.unwrap();
             // DetectLoadColumnsOptimizer must be executed before
@@ -228,7 +227,8 @@ fn apply_projections_early(expression: Box<Expression>, fields: Option<HashSet<S
                 expression
             }
         },
-        Expression::Load(_, _) => expression
+        Expression::Load(_, _) => expression,
+        _ => panic!("Unsupported expression, please run UnfoldComplexExpression")
     }
 }
 
@@ -296,7 +296,6 @@ fn push_down_selections(mut expression: Box<Expression>, mut selections: Vec<(Bo
 
             Box::new(Expression::Rename(push_down_selections(expression, updated_selections), old_columns, new_columns))
         },
-        Expression::ReadSelectProjectRename(_, _, _, _) => (expression), // TODO: support this
         Expression::Load(_, _) => {
             // Reapply selections
             for (condition, _) in selections {
@@ -304,7 +303,8 @@ fn push_down_selections(mut expression: Box<Expression>, mut selections: Vec<(Bo
             }
 
             expression
-        }
+        },
+        _ => panic!("Unsupported expression, please run UnfoldComplexExpression")
     }
 }
 
