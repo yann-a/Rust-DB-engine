@@ -13,7 +13,7 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Rename(expression, old_columns, new_columns) => renaming(expression, old_columns, new_columns),
         Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs) => read_select_project_rename(filename, condition, old_attrs, new_attrs),
         Expression::JoinProjectRename(expr1, expr2, condition, old_attrs, new_attrs) => join_project_rename(expr1, expr2, condition, old_attrs, new_attrs),
-        Expression::Load(filename, _) => read(filename)
+        Expression::Load(filename, _) => read(filename),
     }
 }
 
@@ -206,7 +206,7 @@ fn join_project_rename(expr1: Box<Expression>, expr2: Box<Expression>, condition
     let (column_names2, entries2) = eval(expr2);
 
     // On se repose sur un hash join pour accélérer les cross product
-    let mut unsupported_conditions = Vec::new();
+    let mut unsupported_conditions = Box::new(Condition::True);
     let mut conditions_to_treat = vec![condition];
     let mut bucket1 = HashSet::new();
 
@@ -225,7 +225,7 @@ fn join_project_rename(expr1: Box<Expression>, expr2: Box<Expression>, condition
                 conditions_to_treat.push(c1);
                 conditions_to_treat.push(c2);
             },
-            _ => unsupported_conditions.push(condition)
+            _ => unsupported_conditions = Box::new(Condition::And(unsupported_conditions, condition))
         }
     }
 
@@ -279,20 +279,24 @@ fn join_project_rename(expr1: Box<Expression>, expr2: Box<Expression>, condition
         final_columns.insert(key, value);
     }
 
-    let (swaps, mut final_columns) = swaps_for_projection(&final_columns, &old_attrs);
-    let final_entries = final_entries.into_iter().map(|mut record| {
-        for (i, j) in &swaps {
-            record.swap(*i, *j);
-        }
-        record.truncate(old_attrs.len());
+    let (swaps, mut swapped_columns) = swaps_for_projection(&final_columns, &old_attrs);
+    let final_entries = final_entries.into_iter()
+        .filter(|entry| eval_condition(entry, &final_columns, &unsupported_conditions))
+        .map(|mut record| {
+            for (i, j) in &swaps {
+                record.swap(*i, *j);
+            }
+            record.truncate(old_attrs.len());
 
-        record
-    })
-    .collect();
+            record
+        })
+        .collect();
 
-    rename_columns(&mut final_columns, old_attrs, new_attrs);
+    rename_columns(&mut swapped_columns, old_attrs, new_attrs);
+    
 
-    (final_columns, final_entries)
+
+    (swapped_columns, final_entries)
 }
 
 fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, condition: &Box<Condition>) -> bool {
