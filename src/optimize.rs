@@ -32,6 +32,7 @@ fn visit_children(optimizer: &dyn Optimizer, expression: Box<Expression>) -> Box
             Expression::Except(expr1, expr2) => Expression::Except(optimizer.optimize(expr1), optimizer.optimize(expr2)),
             Expression::Union(expr1, expr2) => Expression::Union(optimizer.optimize(expr1), optimizer.optimize(expr2)),
             Expression::Rename(expression, old_columns, new_columns) => Expression::Rename(optimizer.optimize(expression), old_columns, new_columns),
+            Expression::Load(_, _) => *expression,
             _ => panic!("Unsupported expression, please run UnfoldComplexExpression")
         }
     )
