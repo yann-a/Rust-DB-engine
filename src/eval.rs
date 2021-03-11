@@ -13,6 +13,7 @@ pub fn eval(expression: Box<Expression>) -> Table {
         Expression::Union(expr1, expr2) => union(expr1, expr2),
         Expression::Rename(expression, old_columns, new_columns) => renaming(expression, old_columns, new_columns),
         Expression::ReadSelectProjectRename(filename, condition, old_attrs, new_attrs) => read_select_project_rename(filename, condition, old_attrs, new_attrs),
+        Expression::JoinProjectRename(expr1, expr2, condition, old_attrs, new_attrs) => join_project_rename(expr1, expr2, condition, old_attrs, new_attrs),
         Expression::Load(filename, _) => read(filename),
         // _ => (HashMap::new(), Vec::new())
     }
@@ -134,6 +135,8 @@ fn union(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
     let (column_names1, mut entries1) = eval(expression1);
     let (_column_names2, mut entries2) = eval(expression2);
 
+    // TODO: Support the case where the fields are not aligned
+
     entries1.append(&mut entries2);
 
     (column_names1, entries1)
@@ -198,6 +201,11 @@ fn read_select_project_rename(filename: String, condition: Box<Condition>, old_a
     rename_columns(&mut final_columns, old_attrs, new_attrs);
 
     (final_columns, entries)
+}
+
+fn join_project_rename(expr1: Box<Expression>, expr2: Box<Expression>, condition: Box<Condition>, old_attrs: Vec<String>, new_attrs: Vec<String>) -> Table {
+    let (column_names1, mut entries1) = eval(expr1);
+    let (column_names2, mut entries2) = eval(expr2);
 }
 
 fn eval_condition(entry: &Entry, column_names: &HashMap<String, usize>, condition: &Box<Condition>) -> bool {
