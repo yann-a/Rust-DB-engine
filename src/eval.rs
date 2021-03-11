@@ -131,11 +131,34 @@ fn minus(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
 
 fn union(expression1: Box<Expression>, expression2: Box<Expression>) -> Table {
     let (column_names1, mut entries1) = eval(expression1);
-    let (_column_names2, mut entries2) = eval(expression2);
+    let (mut column_names2, entries2) = eval(expression2);
 
-    // TODO: Support the case where the fields are not aligned
+    let mut columns = vec!["".to_string(); column_names2.len()];
+    for (column, index) in &column_names2 {
+        columns[*index] = column.clone();
+    }
 
-    entries1.append(&mut entries2);
+    let mut swaps = Vec::new();
+    for (column, index) in &column_names1 {
+        let actual_index_mut = column_names2.get_mut(column).unwrap();
+        let actual_index = actual_index_mut.clone();
+        if *index == actual_index {
+            continue;
+        }
+
+        swaps.push((*index, actual_index));
+
+        // On update les positions
+        *actual_index_mut = *index;
+        column_names2.insert(columns[*index].clone(), actual_index);
+    }
+
+    entries1.append(&mut entries2.into_iter().map(|mut entry| {
+        for (i, j) in &swaps {
+            entry.swap(*i, *j);
+        }
+        entry
+    }).collect());
 
     (column_names1, entries1)
 }
@@ -293,8 +316,6 @@ fn join_project_rename(expr1: Box<Expression>, expr2: Box<Expression>, condition
         .collect();
 
     rename_columns(&mut swapped_columns, old_attrs, new_attrs);
-    
-
 
     (swapped_columns, final_entries)
 }
