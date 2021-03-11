@@ -32,6 +32,7 @@ pub enum ExpressionParse {
     Read {filename: String},
     #[serde(rename = "rspr")]
     ReadSelectProjectRename {filename: String, condition: Box<ConditionParse>, #[serde(rename = "old attributes")] old_attributes: Vec<String>, #[serde(rename = "new attributes")] new_attributes: Vec<String>},
+    JoinProjectRename {object1: Box<ExpressionParse>, object2: Box<ExpressionParse>, condition: Box<ConditionParse>, #[serde(rename = "old attributes")] old_attributes: Vec<String>, #[serde(rename = "new attributes")] new_attributes: Vec<String>}
 }
 
 impl From<ConditionParse> for Condition {
@@ -79,7 +80,8 @@ impl From<ExpressionParse> for Expression {
             ExpressionParse::Union {object1: o1, object2: o2} => Expression::Union(Box::new(Expression::from(*o1)), Box::new(Expression::from(*o2))),
             ExpressionParse::Product {object1: o1, object2: o2} => Expression::Product(Box::new(Expression::from(*o1)), Box::new(Expression::from(*o2))),
             ExpressionParse::Read {filename: f} => Expression::Load(f, None),
-            ExpressionParse::ReadSelectProjectRename {filename: f, condition: c, old_attributes: oa, new_attributes: na} => Expression::ReadSelectProjectRename(f, Box::new(Condition::from(*c)), oa, na)
+            ExpressionParse::ReadSelectProjectRename {filename: f, condition: c, old_attributes: oa, new_attributes: na} => Expression::ReadSelectProjectRename(f, Box::new(Condition::from(*c)), oa, na),
+            ExpressionParse::JoinProjectRename {object1: o1, object2: o2, condition: c, old_attributes: oa, new_attributes: na} => Expression::JoinProjectRename(Box::new(Expression::from(*o1)), Box::new(Expression::from(*o2)), Box::new(Condition::from(*c)), oa, na)
         }
     }
 }

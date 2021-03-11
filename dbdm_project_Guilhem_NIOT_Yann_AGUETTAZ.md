@@ -89,5 +89,41 @@ Each optimization should be one of the following :
 
 ## On our implementation
 
+### Structure
+
+Our program is scattered across 6 modules that handle a separate part of the computing :
+* **Types** holds the types that are manipulated by the evaluator
+* **Eval** contains the code to evaluate expressions
+* **Optimize** tries to optimize expressions before passing them to the evaluator
+* **Parser** reads JSON inputs and returns objects of the types defined in the corresponding module
+* **Output** holds the script to write outputs to files or the standard output
+* **Benchmark** fetches benchmarks from the designated folder and runs them
+
 ### Parsing JSON inputs
-This is done using the `serde` crate, along with its JSON parser `serde_json`. Basically, we anotate our type definitions using serde directives in order to specify the bindings between our Rust types and the JSON grammar. Serde then automatically reads the json we feed him and converts it in order to fit the type into which we wish to transform the data.
+
+This is done using the `serde` crate, along with its JSON parser `serde_json`. Basically, we anotate our type definitions using serde directives in order to specify the bindings between our Rust types and the JSON grammar. Serde then automatically reads the json we feed him and converts it in such a way to fit the type into which we wish to transform the data.
+
+Actually, as we felt the grammar wasn't quite the cannonical way to store the expressions and work on them, we had to define some proxy types that corresponded to the grammar, and then implement conversions from these proxy types to our actual types.
+
+### Our working types
+
+We defined a `value` type, which can represent either an int or a string; or a reference to a value, that is a column name, that will then be resolved upon evaluation.
+
+From there, an `entry` is simply a list of values. A `table` is then a list of column names (actually, a `String -> int` map to easilly retrive column's indices by their name), and a list of entries.
+
+`Expression`s and `Condition`s are then represented by recursive types, with one constructor by form (e.g `Select`, `Project`...).
+
+### Optimizations
+
+Four optimizations are implemented :
+* *Detect Load Columns* : Detects the columns that are actually used. Not useful on its own, but helps PDS.
+* *Push Down Selection* : Try to push down selections as long as possible.
+* *Apply Projections Early* : Tries to project as early as possible.
+* *Fold Complex Expressions* : Tries to replace parts of the expression by `rspr` or `jpr` constructions.
+
+## Examples
+
+## Benchmarks
+*NB: These benchmarks can be tested using `cargo run -- -b` (note that the precise numerical values may vary depending on the machine).*  
+*Other benchmarks can be requested using the syntax defined in the above afferent section.*
+
