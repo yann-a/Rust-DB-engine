@@ -83,6 +83,7 @@ The idea is that, for each input, we attach a series of tests, to see whether on
 A test is composed of a name, used to distinguish it from others; and of a list of optomizations to use.
 
 Each optimization should be one of the following :
+* `UCE` : *Unfold Complex Expressions*. Unfolds expressions such as `rspr` and `jpr`, in hope that other optimizations performs better afterwards.
 * `DLC` : *Detect Load Columns*. Detects the columns that are actually used. Should always be used before *PDS*, as the latter relies on this column detection.
 * `PDS` : *Push Down Selection*. Try to push down selections as long as possible.
 * `APE` : *Apply Projections Early*. Tries to project as early as possible.
@@ -118,8 +119,9 @@ From there, an `entry` is simply a list of values. A `table` is then a list of c
 
 ### Optimizations
 
-Four optimizations are implemented :
-* *Detect Load Columns* : Detects the columns that are actually used. Not useful on its own, but helps PDS.
+Five optimizations are implemented :
+* *Unfold Complex Expressions* : Unfolds expressions such as `rspr` and `jpr`, in hope that other optimizations performs better afterwards.
+* *Detect Load Columns* : Detects the columns that are actually used. Not useful on its own, but used for PDS.
 * *Push Down Selection* : Try to push down selections as long as possible.
 * *Apply Projections Early* : Tries to project as early as possible.
 * *Fold Complex Expressions* : Tries to replace parts of the expression by `rspr` or `jpr` constructions.

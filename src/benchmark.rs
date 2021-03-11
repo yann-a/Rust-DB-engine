@@ -29,6 +29,7 @@ fn get_benchmark_from(path: String) -> Benchmark {
 
 fn opti_from_string(opti: String) -> Box<dyn Optimizer> {
     match &opti[..] {
+        "UCE" => Box::new(UnfoldComplexExpressionsOptimizer{}),
         "DLC" => Box::new(DetectLoadColumnsOptimizer{}),
         "PDS" => Box::new(PushDownSelectionsOptimizer{}),
         "APE" => Box::new(ApplyProjectionsEarlyOptimizer{}),

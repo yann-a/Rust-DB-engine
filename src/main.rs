@@ -24,7 +24,7 @@ fn main() {
     let args = App::new("Linear Algebra Engine on CSV files")
         .version("1.0")
         .author("Guilhem Niot <guilhem.niot@ens-lyon.fr>; Yann Aguettaz <yann.aguettaz@ens-lyon.fr>")
-        .about("Takes JSON-formatted querries and runs them on CSV tables")
+        .about("Takes JSON-formatted querries and runs them on CSV tables.\n Read the docs in the mardown files.")
         .arg(Arg::new("source_file")
             .index(1))
         .arg(Arg::new("output_file")
@@ -46,6 +46,7 @@ fn main() {
 
         // Optimization phase
         let optimizer = ChainOptimizer{optimizers: vec![
+            Box::new(UnfoldComplexExpressionsOptimizer{}),
             Box::new(DetectLoadColumnsOptimizer{}),
             Box::new(PushDownSelectionsOptimizer{}),
             Box::new(ApplyProjectionsEarlyOptimizer{}),
