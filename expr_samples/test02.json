@@ -32,8 +32,8 @@
                     "attribute1": "ide",
                     "attribute2": "responsable"
                 },
-                "old attributes": [],
-                "new attributes": []
+                "old attributes": ["idp", "titre", "responsable", "ide", "nom", "email", "dpt"],
+                "new attributes": ["idp", "titre", "responsable", "ide", "nom", "email", "dpt"]
             }
         }
     }

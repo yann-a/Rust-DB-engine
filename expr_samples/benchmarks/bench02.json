@@ -1,0 +1,59 @@
+{
+    "input": {
+        "operation": "projection",
+        "args": {
+            "attributes": ["titre"],
+            "object": {
+                "operation": "jpr",
+                "args": {
+                    "object1": {
+                        "operation": "load",
+                        "args": {
+                            "filename": "project_spec/samples/projets.csv"
+                        }
+                    },
+                    "object2": {
+                        "operation": "selection",
+                        "args": {
+                            "object": {
+                                "operation": "load",
+                                "args": {
+                                    "filename": "project_spec/samples/employes.csv"
+                                }
+                            },
+                            "condition": {
+                                "comparator": "=",
+                                "attribute1": "38",
+                                "attribute2": "ide"
+                            }
+                        }
+                    },
+                    "condition": {
+                        "comparator": "=",
+                        "attribute1": "ide",
+                        "attribute2": "responsable"
+                    },
+                    "old attributes": ["idp", "titre", "responsable", "ide", "nom", "email", "dpt"],
+                    "new attributes": ["idp", "titre", "responsable", "ide", "nom", "email", "dpt"]
+                }
+            }
+        }
+    },
+    "tests": [
+        {
+            "name": "Part 1 (No optim)    ",
+            "optims": []
+        },
+        {
+            "name": "Part 2 (Simple optim)",
+            "optims": [
+                "UCE",
+                "DLC",
+                "PDS",
+                "APE",
+                "FCE"
+            ]
+        }
+    ]
+}
+
