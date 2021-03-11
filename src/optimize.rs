@@ -342,7 +342,7 @@ impl Optimizer for UnfoldComplexExpressionsOptimizer {
                 Box::new(Expression::Rename(
                     Box::new(Expression::Project(
                         Box::new(Expression::Select(
-                            Box::new(Expression::Product(expr1, expr2)),
+                            Box::new(Expression::Product(self.optimize(expr1), self.optimize(expr2))),
                             condition
                         )),
                         old_attrs.iter().cloned().collect()
