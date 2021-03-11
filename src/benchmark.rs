@@ -11,8 +11,8 @@ use std::time::Instant;
 
 #[derive(Deserialize, Debug)]
 struct Test {
-    nom: String,
-    optis: Vec<String>
+    name: String,
+    optims: Vec<String>
 }
 
 #[derive(Deserialize, Debug)]
@@ -48,7 +48,7 @@ fn run_benchmark_on(path: String, n: Option<u128>) {
     println!("### Running benchmark {} ###\n", path);
 
     for test in tests {
-        let optims = test.optis.into_iter().map(|opti| opti_from_string(opti)).collect();
+        let optims = test.optims.into_iter().map(|opti| opti_from_string(opti)).collect();
         let optimizer = ChainOptimizer{optimizers: optims};
 
         let expr = optimizer.optimize(expression.clone());
@@ -63,13 +63,13 @@ fn run_benchmark_on(path: String, n: Option<u128>) {
             total_time += time_elapsed;
         }
         
-        println!("{} took {:.2?} on average", test.nom, total_time/(nb_it as u32));
+        println!("{} took {:.2?} on average", test.name, total_time/(nb_it as u32));
     }
 }
 
 pub fn run_benchmark() {
-    // Get a vector of all filenaames inside "tests/benchmarks"
-    let mut entries : Vec<_> = fs::read_dir("tests/benchmarks").
+    // Get a vector of all filenaames inside "expr_samples/benchmarks"
+    let mut entries : Vec<_> = fs::read_dir("expr_samples/benchmarks").
         unwrap()
         .map(|res| {
             res.map(|e| e.path())

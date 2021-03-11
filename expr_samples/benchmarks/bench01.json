@@ -20,14 +20,16 @@
     },
     "tests": [
         {
-            "nom": "Etape 1",
-            "optis": []
+            "name": "Part 1 (No optim)    ",
+            "optims": []
         },
         {
-            "nom": "Etape 2",
-            "optis": [
+            "name": "Part 2 (Simple optim)",
+            "optims": [
                 "DLC",
-                "PDS"
+                "PDS",
+                "APE",
+                "FCE"
             ]
         }
     ]
