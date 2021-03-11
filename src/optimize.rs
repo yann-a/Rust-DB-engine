@@ -179,10 +179,16 @@ fn apply_projections_early(expression: Box<Expression>, fields: Option<HashSet<S
         Expression::Project(expression_from, columns) => 
         {
             // Quand on a un project, les éléments utilisés correspondent exactement aux éléments du project
-            let mut fields = HashSet::new();
-            for column in columns {
-                fields.insert(column);
-            }
+            let fields = if fields.is_none() {
+                let mut fields = HashSet::new();
+                for column in columns {
+                    fields.insert(column);
+                }
+
+                fields
+            } else {
+                fields.unwrap()
+            };
 
             // On remonte les project, donc rien à faire ici
             apply_projections_early(expression_from, Some(fields))
@@ -208,13 +214,13 @@ fn apply_projections_early(expression: Box<Expression>, fields: Option<HashSet<S
         Expression::Rename(expression, old_columns, new_columns) if fields.is_some() => {
             let mut fields_set = fields.unwrap();
 
+            let (old_columns, new_columns) : (Vec<_>, Vec<_>) = old_columns.into_iter().zip(new_columns.into_iter()).filter(
+                |(_, new)| fields_set.contains(new)
+            ).unzip();
+
             for i in 0..old_columns.len() {
-                if fields_set.contains(&new_columns[i]) {
-                    fields_set.remove(&new_columns[i]);
-                    fields_set.insert(old_columns[i].clone());
-                } else {
-                    fields_set.remove(&old_columns[i]);
-                }
+                fields_set.remove(&new_columns[i]);
+                fields_set.insert(old_columns[i].clone());
             }
 
             Box::new(Expression::Rename(apply_projections_early(expression, Some(fields_set)), old_columns, new_columns))
